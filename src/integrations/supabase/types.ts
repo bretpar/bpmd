@@ -14,16 +14,228 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      exercises: {
+        Row: {
+          body_region: string | null
+          created_at: string
+          description: string | null
+          difficulty: string | null
+          id: string
+          image_url: string | null
+          instructions: string | null
+          name: string
+          published: boolean
+          slug: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          body_region?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          id?: string
+          image_url?: string | null
+          instructions?: string | null
+          name: string
+          published?: boolean
+          slug: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          body_region?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          id?: string
+          image_url?: string | null
+          instructions?: string | null
+          name?: string
+          published?: boolean
+          slug?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      injuries: {
+        Row: {
+          body_region: string | null
+          causes: string | null
+          cover_image_url: string | null
+          created_at: string
+          id: string
+          name: string
+          overview: string | null
+          published: boolean
+          slug: string
+          summary: string | null
+          symptoms: string | null
+          treatment_overview: string | null
+          updated_at: string
+          when_to_see_doctor: string | null
+        }
+        Insert: {
+          body_region?: string | null
+          causes?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          overview?: string | null
+          published?: boolean
+          slug: string
+          summary?: string | null
+          symptoms?: string | null
+          treatment_overview?: string | null
+          updated_at?: string
+          when_to_see_doctor?: string | null
+        }
+        Update: {
+          body_region?: string | null
+          causes?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          overview?: string | null
+          published?: boolean
+          slug?: string
+          summary?: string | null
+          symptoms?: string | null
+          treatment_overview?: string | null
+          updated_at?: string
+          when_to_see_doctor?: string | null
+        }
+        Relationships: []
+      }
+      injury_exercises: {
+        Row: {
+          exercise_id: string
+          injury_id: string
+          notes: string | null
+          sort_order: number
+        }
+        Insert: {
+          exercise_id: string
+          injury_id: string
+          notes?: string | null
+          sort_order?: number
+        }
+        Update: {
+          exercise_id?: string
+          injury_id?: string
+          notes?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injury_exercises_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "injury_exercises_injury_id_fkey"
+            columns: ["injury_id"]
+            isOneToOne: false
+            referencedRelation: "injuries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pt_locations: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          id: string
+          lat: number | null
+          lng: number | null
+          name: string
+          notes: string | null
+          phone: string | null
+          region: string | null
+          specialties: string[] | null
+          state: string | null
+          updated_at: string
+          website: string | null
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          region?: string | null
+          specialties?: string[] | null
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          region?: string | null
+          specialties?: string[] | null
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +362,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
