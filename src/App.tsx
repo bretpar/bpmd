@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/hooks/useAuth";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Services from "./pages/Services";
@@ -11,6 +12,10 @@ import Ultrasound from "./pages/Ultrasound";
 import PTExercises from "./pages/PTExercises";
 import PTLocations from "./pages/PTLocations";
 import Contact from "./pages/Contact";
+import Auth from "./pages/Auth";
+import Admin from "./pages/Admin";
+import Injuries from "./pages/Injuries";
+import InjuryDetail from "./pages/InjuryDetail";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -22,18 +27,24 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/resources" element={<Resources />} />
-          <Route path="/ultrasound" element={<Ultrasound />} />
-          <Route path="/pt-exercises" element={<PTExercises />} />
-          <Route path="/pt-locations" element={<PTLocations />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <ScrollToTop />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/ultrasound" element={<Ultrasound />} />
+            <Route path="/injuries" element={<Injuries />} />
+            <Route path="/injuries/:slug" element={<InjuryDetail />} />
+            <Route path="/pt-exercises" element={<PTExercises />} />
+            <Route path="/pt-locations" element={<PTLocations />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
