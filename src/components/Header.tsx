@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
-const navLinks = [
+const baseNavLinks = [
   { label: "Home", path: "/" },
   { label: "About", path: "/about" },
   { label: "Services", path: "/services" },
   { label: "Orthopedic Resources", path: "/resources" },
+  { label: "Injuries", path: "/injuries" },
   { label: "Physical Therapy", path: "/pt-exercises" },
   { label: "Ultrasound", path: "/ultrasound" },
   { label: "Contact", path: "/contact" },
@@ -16,6 +18,8 @@ const navLinks = [
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const { isAdmin } = useAuth();
+  const navLinks = isAdmin ? [...baseNavLinks, { label: "Admin", path: "/admin" }] : baseNavLinks;
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
