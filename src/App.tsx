@@ -11,6 +11,16 @@ import Resources from "./pages/Resources";
 import Ultrasound from "./pages/Ultrasound";
 import PTExercises from "./pages/PTExercises";
 import PTLocations from "./pages/PTLocations";
+import {
+  ExerciseLibraryHome,
+  DiagnosisList,
+  DiagnosisDetail,
+  RegionList,
+  RegionDetail,
+  JointHealthList,
+  JointHealthDetail,
+  ExerciseSearch,
+} from "./pages/ExerciseLibrary";
 import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
@@ -38,6 +48,14 @@ const App = () => (
             <Route path="/injuries" element={<Injuries />} />
             <Route path="/injuries/:slug" element={<InjuryDetail />} />
             <Route path="/pt-exercises" element={<PTExercises />} />
+            <Route path="/exercise-library" element={<ExerciseLibraryHome />} />
+            <Route path="/exercise-library/search" element={<ExerciseSearch />} />
+            <Route path="/exercise-library/diagnosis" element={<DiagnosisList />} />
+            <Route path="/exercise-library/diagnosis/:slug" element={<DiagnosisDetail />} />
+            <Route path="/exercise-library/region" element={<RegionList />} />
+            <Route path="/exercise-library/region/:slug" element={<RegionDetail />} />
+            <Route path="/exercise-library/joint-health" element={<JointHealthList />} />
+            <Route path="/exercise-library/joint-health/:slug" element={<JointHealthDetail />} />
             <Route path="/pt-locations" element={<PTLocations />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/auth" element={<Auth />} />
