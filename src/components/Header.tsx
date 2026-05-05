@@ -10,7 +10,8 @@ const baseNavLinks = [
   { label: "Services", path: "/services" },
   { label: "Orthopedic Resources", path: "/resources" },
   { label: "Injuries", path: "/injuries" },
-  { label: "Physical Therapy", path: "/pt-exercises" },
+  { label: "Exercise Library", path: "/exercise-library" },
+  { label: "PT Locations", path: "/pt-locations" },
   { label: "Ultrasound", path: "/ultrasound" },
   { label: "Contact", path: "/contact" },
 ];

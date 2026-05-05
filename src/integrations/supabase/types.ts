@@ -17,45 +17,78 @@ export type Database = {
       exercises: {
         Row: {
           body_region: string | null
+          common_mistakes: string | null
           created_at: string
           description: string | null
+          diagnosis_tags: string[] | null
           difficulty: string | null
+          equipment: string | null
+          exercise_type: string | null
           id: string
           image_url: string | null
           instructions: string | null
+          joint_health_category: string | null
           name: string
           published: boolean
+          purpose: string | null
+          related_exercises: string[] | null
+          safety_tips: string | null
+          sets_reps_or_hold_time: string | null
           slug: string
+          stop_if: string | null
           updated_at: string
           video_url: string | null
+          you_should_feel: string | null
         }
         Insert: {
           body_region?: string | null
+          common_mistakes?: string | null
           created_at?: string
           description?: string | null
+          diagnosis_tags?: string[] | null
           difficulty?: string | null
+          equipment?: string | null
+          exercise_type?: string | null
           id?: string
           image_url?: string | null
           instructions?: string | null
+          joint_health_category?: string | null
           name: string
           published?: boolean
+          purpose?: string | null
+          related_exercises?: string[] | null
+          safety_tips?: string | null
+          sets_reps_or_hold_time?: string | null
           slug: string
+          stop_if?: string | null
           updated_at?: string
           video_url?: string | null
+          you_should_feel?: string | null
         }
         Update: {
           body_region?: string | null
+          common_mistakes?: string | null
           created_at?: string
           description?: string | null
+          diagnosis_tags?: string[] | null
           difficulty?: string | null
+          equipment?: string | null
+          exercise_type?: string | null
           id?: string
           image_url?: string | null
           instructions?: string | null
+          joint_health_category?: string | null
           name?: string
           published?: boolean
+          purpose?: string | null
+          related_exercises?: string[] | null
+          safety_tips?: string | null
+          sets_reps_or_hold_time?: string | null
           slug?: string
+          stop_if?: string | null
           updated_at?: string
           video_url?: string | null
+          you_should_feel?: string | null
         }
         Relationships: []
       }
