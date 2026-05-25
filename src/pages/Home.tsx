@@ -1,46 +1,69 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Phone, ArrowRight, Compass, Waves, Dumbbell, MapPin } from "lucide-react";
+import { ArrowRight, Compass, Waves, Dumbbell, MapPin, ShieldCheck } from "lucide-react";
 import Layout from "@/components/Layout";
 import ContactCTA from "@/components/ContactCTA";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroNew from "@/assets/hero-new.jpg";
 
 const interestCards = [
   { title: "Ortho Compass", description: "Orthopedic resource hub for evidence-based information", icon: Compass, link: "/resources" },
   { title: "Ultrasound Injections", description: "Guided injection procedures for precision treatment", icon: Waves, link: "/ultrasound" },
-  { title: "Home Exercises", description: "Structured rehabilitation exercises by body region", icon: Dumbbell, link: "/pt-exercises" },
+  { title: "Exercise Library", description: "Patient-friendly exercises by diagnosis, body region, and joint health", icon: Dumbbell, link: "/exercise-library" },
   { title: "PT Locations", description: "Find trusted physical therapy clinics nearby", icon: MapPin, link: "/pt-locations" },
 ];
 
 const Home = () => (
   <Layout>
     {/* Hero */}
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden min-h-[70vh] md:min-h-[80vh] flex items-center">
       <div className="absolute inset-0">
-        <img src={heroBg} alt="Modern sports medicine clinic" className="w-full h-full object-cover" width={1920} height={1080} />
-        <div className="absolute inset-0 bg-gradient-to-r from-foreground/90 via-foreground/70 to-foreground/40" />
+        <img
+          src={heroNew}
+          alt="Sports medicine physician evaluating a patient"
+          className="w-full h-full object-cover"
+          width={1920}
+          height={1080}
+        />
+        <div className="absolute inset-1 bg-gradient-to-r from-[hsl(213,72%,18%)]/92 via-[hsl(213,72%,22%)]/75 to-transparent" />
+        <div className="absolute inset-1 bg-gradient-to-t from-[hsl(213,72%,18%)]/50 via-transparent to-transparent" />
       </div>
-      <div className="relative container mx-auto px-4 lg:px-8 py-24 md:py-36">
+      <div className="relative container mx-auto px-4 lg:px-8 py-20 md:py-28">
         <div className="max-w-2xl">
-          <p className="text-accent font-medium mb-2 tracking-wide uppercase text-sm">Non-Operative Sports Medicine</p>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-5 leading-tight">
-            Patient-Centered Care
-          </h1>
-          <p className="text-primary-foreground/80 text-lg md:text-xl leading-relaxed mb-8 max-w-xl">
-            Integrating evidence-based healthcare into patient-focused treatments, helping you return to the activities you love.
+          <p className="text-[hsl(199,89%,65%)] font-semibold mb-3 tracking-wider uppercase text-sm">
+            Non-Operative Sports Medicine
           </p>
-          <div className="flex flex-wrap gap-3">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5 leading-[1.1]">
+            Get Back to What You Love
+          </h1>
+          <p className="text-white/80 text-lg md:text-xl leading-relaxed mb-8 max-w-xl">
+            Evidence-based, non-surgical care for sports injuries, joint pain, and active lifestyles — tailored to your goals.
+          </p>
+
+          {/* Credibility line */}
+          <div className="flex items-center gap-2 mb-8 text-white/70 text-sm">
+            <ShieldCheck className="w-4 h-4 text-[hsl(199,89%,65%)]" />
+            <span>Board-certified sports medicine physician focused on keeping patients active without surgery.</span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4">
             <Link to="/contact">
-              <Button size="lg" className="bg-gradient-medical hover:opacity-90 gap-2 text-primary-foreground">
-                Schedule a Visit <ArrowRight className="w-4 h-4" />
+              <Button
+                size="lg"
+                className="bg-white text-[hsl(213,72%,28%)] hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] gap-2 rounded-full px-8 py-6 text-base font-semibold shadow-[0_8px_30px_-8px_rgba(255,255,255,0.25)] transition-all duration-200"
+              >
+                Schedule an Appointment <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
-            <a href="tel:4253395447">
-              <Button size="lg" variant="outline" className="gap-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
-                <Phone className="w-4 h-4" /> 425-339-5447
+            <Link to="/services">
+              <Button
+                size="lg"
+                variant="outline"
+                className="gap-2 rounded-full px-8 py-6 text-base font-semibold border-white/30 text-white bg-white/5 backdrop-blur-sm hover:bg-white/15 hover:border-white/40 transition-all duration-200"
+              >
+                Learn About Care Options
               </Button>
-            </a>
-          </div>
+            </Link>
+          </p>
         </div>
       </div>
     </section>
