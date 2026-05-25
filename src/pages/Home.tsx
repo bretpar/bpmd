@@ -16,7 +16,7 @@ const Home = () => (
   <Layout>
     {/* Hero */}
     <section className="relative overflow-hidden min-h-[70vh] md:min-h-[80vh] flex items-center">
-      <div className="absolute inset-0">
+      <div className="absolute inset-1">
         <img
           src={heroNew}
           alt="Sports medicine physician evaluating a patient"
@@ -24,8 +24,8 @@ const Home = () => (
           width={1920}
           height={1080}
         />
-        <div className="absolute inset-1 bg-gradient-to-r from-[hsl(213,72%,18%)]/92 via-[hsl(213,72%,22%)]/75 to-transparent" />
-        <div className="absolute inset-1 bg-gradient-to-t from-[hsl(213,72%,18%)]/50 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(213,72%,18%)]/92 via-[hsl(213,72%,22%)]/75 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(213,72%,18%)]/50 via-transparent to-transparent" />
       </div>
       <div className="relative container mx-auto px-4 lg:px-8 py-20 md:py-28">
         <div className="max-w-2xl">
@@ -41,7 +41,7 @@ const Home = () => (
 
           {/* Credibility line */}
           <div className="flex items-center gap-2 mb-8 text-white/70 text-sm">
-            <ShieldCheck className="w-4 h-4 text-[hsl(199,89%,65%)]" />
+            <ShieldCheck className="w-4 h-4 text-[hsl(199,89%,65%)] flex-shrink-0" />
             <span>Board-certified sports medicine physician focused on keeping patients active without surgery.</span>
           </div>
 
@@ -63,7 +63,7 @@ const Home = () => (
                 Learn About Care Options
               </Button>
             </Link>
-          </p>
+          </div>
         </div>
       </div>
     </section>
