@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Compass, Waves, Dumbbell, MapPin, ShieldCheck } from "lucide-react";
 import Layout from "@/components/Layout";
 import ContactCTA from "@/components/ContactCTA";
-import heroNew from "@/assets/hero-new.jpg";
+import heroTrack from "@/assets/hero-track.jpg";
 
 const interestCards = [
   { title: "Ortho Compass", description: "Orthopedic resource hub for evidence-based information", icon: Compass, link: "/resources" },
@@ -15,50 +15,51 @@ const interestCards = [
 const Home = () => (
   <Layout>
     {/* Hero */}
-    <section className="relative overflow-hidden min-h-[70vh] md:min-h-[80vh] flex items-center">
-      <div className="absolute inset-1">
+    <section className="relative overflow-hidden min-h-[78vh] md:min-h-[85vh] flex items-center">
+      <div className="absolute inset-0">
         <img
-          src={heroNew}
-          alt="Sports medicine physician evaluating a patient"
-          className="w-full h-full object-cover"
+          src={heroTrack}
+          alt="Modern running track lanes representing active sports medicine care"
+          className="w-full h-full object-cover object-center"
           width={1920}
           height={1080}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(213,72%,18%)]/92 via-[hsl(213,72%,22%)]/75 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(213,72%,18%)]/50 via-transparent to-transparent" />
+        {/* Layered overlays for strong text contrast, weighted to the left */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(213,75%,10%)]/95 via-[hsl(213,72%,14%)]/85 sm:via-[hsl(213,72%,14%)]/75 to-[hsl(213,72%,18%)]/55" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(213,75%,8%)]/70 via-transparent to-[hsl(213,75%,8%)]/30" />
       </div>
       <div className="relative container mx-auto px-4 lg:px-8 py-20 md:py-28">
         <div className="max-w-2xl">
-          <p className="text-[hsl(199,89%,65%)] font-semibold mb-3 tracking-wider uppercase text-sm">
+          <span className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full bg-[hsl(199,89%,55%)]/15 border border-[hsl(199,89%,65%)]/40 text-[hsl(199,95%,80%)] font-semibold tracking-[0.15em] uppercase text-xs backdrop-blur-sm">
             Non-Operative Sports Medicine
-          </p>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5 leading-[1.1]">
+          </span>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5 leading-[1.1] [text-shadow:0_2px_24px_rgba(0,0,0,0.35)]">
             Get Back to What You Love
           </h1>
-          <p className="text-white/80 text-lg md:text-xl leading-relaxed mb-8 max-w-xl">
+          <p className="text-white/90 text-lg md:text-xl leading-relaxed mb-8 max-w-xl [text-shadow:0_1px_12px_rgba(0,0,0,0.4)]">
             Evidence-based, non-surgical care for sports injuries, joint pain, and active lifestyles — tailored to your goals.
           </p>
 
           {/* Credibility line */}
-          <div className="flex items-center gap-2 mb-8 text-white/70 text-sm">
-            <ShieldCheck className="w-4 h-4 text-[hsl(199,89%,65%)] flex-shrink-0" />
+          <div className="flex items-start gap-2 mb-8 text-white/85 text-sm max-w-lg">
+            <ShieldCheck className="w-4 h-4 mt-0.5 text-[hsl(199,95%,75%)] flex-shrink-0" />
             <span>Board-certified sports medicine physician focused on keeping patients active without surgery.</span>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link to="/contact">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <Link to="/contact" className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="bg-white text-[hsl(213,72%,28%)] hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] gap-2 rounded-full px-8 py-6 text-base font-semibold shadow-[0_8px_30px_-8px_rgba(255,255,255,0.25)] transition-all duration-200"
+                className="w-full sm:w-auto bg-white text-[hsl(213,75%,18%)] hover:bg-white hover:shadow-[0_12px_40px_-8px_rgba(255,255,255,0.5)] hover:-translate-y-0.5 active:translate-y-0 gap-2 rounded-full px-8 py-6 text-base font-semibold shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)] transition-all duration-200"
               >
                 Schedule an Appointment <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
-            <Link to="/services">
+            <Link to="/services" className="w-full sm:w-auto">
               <Button
                 size="lg"
                 variant="outline"
-                className="gap-2 rounded-full px-8 py-6 text-base font-semibold border-white/30 text-white bg-white/5 backdrop-blur-sm hover:bg-white/15 hover:border-white/40 transition-all duration-200"
+                className="w-full sm:w-auto gap-2 rounded-full px-8 py-6 text-base font-semibold border-2 border-white/70 text-white bg-[hsl(213,75%,12%)]/70 hover:bg-[hsl(213,75%,18%)]/85 hover:border-white hover:-translate-y-0.5 active:translate-y-0 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)] transition-all duration-200"
               >
                 Learn About Care Options
               </Button>
