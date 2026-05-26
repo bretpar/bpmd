@@ -24,6 +24,7 @@ import {
 import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import ExerciseLibraryAdmin from "./pages/ExerciseLibraryAdmin";
 import Injuries from "./pages/Injuries";
 import InjuryDetail from "./pages/InjuryDetail";
 import NotFound from "./pages/NotFound";
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/exercise-library-admin" element={<ExerciseLibraryAdmin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

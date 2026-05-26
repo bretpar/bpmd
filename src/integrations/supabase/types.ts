@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      body_locations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       exercises: {
         Row: {
           body_region: string | null
@@ -179,6 +203,41 @@ export type Database = {
           },
         ]
       }
+      pathologies: {
+        Row: {
+          body_location_id: string | null
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          body_location_id?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          body_location_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathologies_body_location_id_fkey"
+            columns: ["body_location_id"]
+            isOneToOne: false
+            referencedRelation: "body_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pt_locations: {
         Row: {
           address: string | null
@@ -230,6 +289,117 @@ export type Database = {
           updated_at?: string
           website?: string | null
           zip?: string | null
+        }
+        Relationships: []
+      }
+      rehab_exercise_locations: {
+        Row: {
+          body_location_id: string
+          exercise_id: string
+        }
+        Insert: {
+          body_location_id: string
+          exercise_id: string
+        }
+        Update: {
+          body_location_id?: string
+          exercise_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rehab_exercise_locations_body_location_id_fkey"
+            columns: ["body_location_id"]
+            isOneToOne: false
+            referencedRelation: "body_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rehab_exercise_locations_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "rehab_exercises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rehab_exercise_pathologies: {
+        Row: {
+          exercise_id: string
+          pathology_id: string
+        }
+        Insert: {
+          exercise_id: string
+          pathology_id: string
+        }
+        Update: {
+          exercise_id?: string
+          pathology_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rehab_exercise_pathologies_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "rehab_exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rehab_exercise_pathologies_pathology_id_fkey"
+            columns: ["pathology_id"]
+            isOneToOne: false
+            referencedRelation: "pathologies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rehab_exercises: {
+        Row: {
+          created_at: string
+          difficulty: string | null
+          equipment_needed: string | null
+          full_instructions: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          precautions: string | null
+          rehab_phase: string | null
+          short_description: string | null
+          slug: string
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          difficulty?: string | null
+          equipment_needed?: string | null
+          full_instructions?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          precautions?: string | null
+          rehab_phase?: string | null
+          short_description?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string | null
+          equipment_needed?: string | null
+          full_instructions?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          precautions?: string | null
+          rehab_phase?: string | null
+          short_description?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+          video_url?: string | null
         }
         Relationships: []
       }
