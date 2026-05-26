@@ -24,6 +24,7 @@ import {
 import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import ExerciseLibraryAdmin from "./pages/ExerciseLibraryAdmin";
 import Injuries from "./pages/Injuries";
 import InjuryDetail from "./pages/InjuryDetail";
 import NotFound from "./pages/NotFound";
