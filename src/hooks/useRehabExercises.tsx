@@ -13,6 +13,7 @@ export type RehabExercise = {
   difficulty: string | null;
   rehab_phase: string | null;
   precautions: string | null;
+  is_general_exercise: boolean;
   location_slugs: string[];
   location_names: string[];
   pathology_slugs: string[];
@@ -41,11 +42,11 @@ export const useRehabExercises = () => {
 
   useEffect(() => {
     (async () => {
-      const { data: rows } = await supabase
+      const { data: rows } = await (supabase as any)
         .from("rehab_exercises")
         .select(
           `id, slug, title, short_description, full_instructions, equipment_needed,
-           image_url, video_url, difficulty, rehab_phase, precautions, is_active,
+           image_url, video_url, difficulty, rehab_phase, precautions, is_active, is_general_exercise,
            rehab_exercise_locations ( body_locations ( slug, name ) ),
            rehab_exercise_pathologies ( pathologies ( slug, name ) )`
         )
@@ -64,6 +65,7 @@ export const useRehabExercises = () => {
         difficulty: r.difficulty,
         rehab_phase: r.rehab_phase,
         precautions: r.precautions,
+        is_general_exercise: !!r.is_general_exercise,
         location_slugs: (r.rehab_exercise_locations || [])
           .map((l: any) => l.body_locations?.slug)
           .filter(Boolean),

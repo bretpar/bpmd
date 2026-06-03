@@ -361,6 +361,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
+          is_general_exercise: boolean
           precautions: string | null
           rehab_phase: string | null
           short_description: string | null
@@ -377,6 +378,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_general_exercise?: boolean
           precautions?: string | null
           rehab_phase?: string | null
           short_description?: string | null
@@ -393,6 +395,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_general_exercise?: boolean
           precautions?: string | null
           rehab_phase?: string | null
           short_description?: string | null
