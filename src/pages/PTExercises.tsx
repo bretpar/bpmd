@@ -1,35 +1,29 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import ContactCTA from "@/components/ContactCTA";
-import { ChevronRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-
-const REGION_LABELS: Record<string, string> = {
-  neck: "Neck",
-  shoulder: "Shoulder",
-  elbow: "Elbow",
-  "wrist-hand": "Wrist / Hand",
-  hip: "Hip",
-  knee: "Knee",
-  "ankle-foot": "Ankle / Foot",
-};
-const ORDER = ["neck", "shoulder", "elbow", "wrist-hand", "hip", "knee", "ankle-foot"];
+import { ChevronRight, Activity } from "lucide-react";
+import { useRehabExercises, REHAB_PHASE_LABELS } from "@/hooks/useRehabExercises";
 
 const PTExercises = () => {
-  const [exercises, setExercises] = useState<any[]>([]);
+  const { data: exercises, loading } = useRehabExercises();
   const [openRegion, setOpenRegion] = useState<string | null>(null);
 
-  useEffect(() => {
-    supabase.from("exercises").select("*").eq("published", true).order("name").then(({ data }) => setExercises(data || []));
-  }, []);
-
-  const grouped = exercises.reduce((acc: Record<string, any[]>, e) => {
-    const key = e.body_region || "other";
-    (acc[key] ||= []).push(e);
-    return acc;
-  }, {});
-  const regionKeys = [...ORDER.filter((k) => grouped[k]), ...Object.keys(grouped).filter((k) => !ORDER.includes(k))];
+  // Group by body location (each exercise can appear in multiple regions)
+  const grouped: Record<string, { name: string; items: typeof exercises }> = {};
+  for (const ex of exercises) {
+    if (ex.location_slugs.length === 0) {
+      grouped["other"] ||= { name: "Other", items: [] };
+      grouped["other"].items.push(ex);
+      continue;
+    }
+    ex.location_slugs.forEach((slug, i) => {
+      const name = ex.location_names[i] || slug;
+      grouped[slug] ||= { name, items: [] };
+      grouped[slug].items.push(ex);
+    });
+  }
+  const regionKeys = Object.keys(grouped).sort((a, b) => grouped[a].name.localeCompare(grouped[b].name));
 
   return (
     <Layout>
@@ -50,17 +44,24 @@ const PTExercises = () => {
                   onClick={() => setOpenRegion(openRegion === rk ? null : rk)}
                   className="w-full flex items-center justify-between p-5 text-left hover:bg-muted/50 transition-colors"
                 >
-                  <span className="font-semibold text-foreground text-lg">{REGION_LABELS[rk] || rk}</span>
+                  <span className="font-semibold text-foreground text-lg">{grouped[rk].name}</span>
                   <ChevronRight className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${openRegion === rk ? "rotate-90" : ""}`} />
                 </button>
                 {openRegion === rk && (
                   <div className="border-t border-border px-5 pb-5">
                     <div className="grid gap-4 pt-4">
-                      {grouped[rk].map((ex) => (
+                      {grouped[rk].items.map((ex) => (
                         <div key={ex.id} className="flex items-start gap-3">
                           <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
                           <div>
-                            <h4 className="font-medium text-foreground">{ex.name}</h4>
+                            <h4 className="font-medium text-foreground">
+                              {ex.name}
+                              {ex.rehab_phase && (
+                                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                                  · {REHAB_PHASE_LABELS[ex.rehab_phase] || ex.rehab_phase}
+                                </span>
+                              )}
+                            </h4>
                             {ex.description && <p className="text-sm text-muted-foreground">{ex.description}</p>}
                           </div>
                         </div>
@@ -70,7 +71,13 @@ const PTExercises = () => {
                 )}
               </div>
             ))}
-            {exercises.length === 0 && <p className="text-center text-muted-foreground py-8">Loading exercises...</p>}
+            {loading && <p className="text-center text-muted-foreground py-8">Loading exercises...</p>}
+            {!loading && exercises.length === 0 && (
+              <div className="text-center py-12 border border-dashed border-border rounded-lg">
+                <Activity className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
+                <p className="text-muted-foreground">No active exercises yet. Check back soon.</p>
+              </div>
+            )}
           </div>
 
           <div className="text-center mt-10">
