@@ -51,6 +51,7 @@ interface RehabExercise {
   image_url: string | null;
   video_url: string | null;
   is_active: boolean;
+  is_general_exercise: boolean;
   location_ids: string[];
   pathology_ids: string[];
 }
@@ -82,6 +83,7 @@ const emptyExercise = (): RehabExercise => ({
   image_url: "",
   video_url: "",
   is_active: true,
+  is_general_exercise: false,
   location_ids: [],
   pathology_ids: [],
 });
@@ -313,6 +315,7 @@ function ExerciseEditor({
         image_url: form.image_url || null,
         video_url: form.video_url || null,
         is_active: form.is_active,
+        is_general_exercise: form.is_general_exercise,
       };
 
       let exId = form.id;
@@ -445,6 +448,18 @@ function ExerciseEditor({
             <div>
               <Label>Video URL</Label>
               <Input value={form.video_url ?? ""} onChange={(e) => set({ video_url: e.target.value })} />
+            </div>
+          </div>
+          <div className="rounded-lg border bg-muted/30 p-3 flex items-start gap-3">
+            <Switch
+              checked={form.is_general_exercise}
+              onCheckedChange={(v) => set({ is_general_exercise: v })}
+            />
+            <div>
+              <Label className="cursor-pointer">General exercise for selected joint(s)</Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Use this for general mobility, stretching, strengthening, or maintenance exercises that should appear at the top of a joint page before diagnosis-specific exercises.
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
