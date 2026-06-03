@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Stethoscope, Activity, HeartPulse, ChevronRight, Search, AlertTriangle, Home as HomeIcon } from "lucide-react";
+import {
+  RehabExercise,
+  REHAB_PHASE_LABELS,
+  REHAB_PHASE_ORDER,
+  useRehabExercises,
+} from "@/hooks/useRehabExercises";
 
-// ---------- Static taxonomies ----------
+// ---------- Static taxonomies (display fallback when DB has no pathologies/locations seeded) ----------
 export const DIAGNOSES = [
   { slug: "shoulder-impingement", name: "Shoulder Impingement", region: "shoulder" },
   { slug: "rotator-cuff-tendinitis", name: "Rotator Cuff Tendinitis", region: "shoulder" },
@@ -39,49 +44,13 @@ export const REGIONS = [
 ];
 
 export const JOINT_HEALTH = [
-  { slug: "shoulder-health", name: "Shoulder Health" },
-  { slug: "knee-health", name: "Knee Health" },
-  { slug: "hip-health", name: "Hip Health" },
-  { slug: "low-back-health", name: "Low Back Health" },
-  { slug: "neck-health", name: "Neck Health" },
-  { slug: "ankle-health", name: "Ankle Health" },
+  { slug: "shoulder", name: "Shoulder Health" },
+  { slug: "knee", name: "Knee Health" },
+  { slug: "hip", name: "Hip Health" },
+  { slug: "low-back", name: "Low Back Health" },
+  { slug: "neck", name: "Neck Health" },
+  { slug: "ankle-foot", name: "Ankle Health" },
 ];
-
-const TYPE_LABELS: Record<string, string> = {
-  stretch: "Stretches",
-  mobility: "Mobility / Range of Motion",
-  strengthening: "Strengthening",
-};
-
-const TYPE_LABELS_JOINT: Record<string, string> = {
-  mobility: "Quick Mobility",
-  stretch: "Stretching",
-  strengthening: "Strengthening",
-};
-
-// ---------- Types ----------
-type Exercise = {
-  id: string;
-  slug: string;
-  name: string;
-  description: string | null;
-  body_region: string | null;
-  joint_health_category: string | null;
-  diagnosis_tags: string[] | null;
-  exercise_type: string | null;
-  equipment: string | null;
-  difficulty: string | null;
-  sets_reps_or_hold_time: string | null;
-  instructions: string | null;
-  purpose: string | null;
-  you_should_feel: string | null;
-  stop_if: string | null;
-  common_mistakes: string | null;
-  safety_tips: string | null;
-  related_exercises: string[] | null;
-  image_url: string | null;
-  video_url: string | null;
-};
 
 // ---------- Disclaimer ----------
 const Disclaimer = () => (
@@ -109,7 +78,7 @@ const Crumbs = ({ items }: { items: { label: string; to?: string }[] }) => (
 );
 
 // ---------- Exercise Card ----------
-const ExerciseCard = ({ ex, onView }: { ex: Exercise; onView: (e: Exercise) => void }) => (
+const ExerciseCard = ({ ex, onView }: { ex: RehabExercise; onView: (e: RehabExercise) => void }) => (
   <Card className="flex flex-col h-full hover:shadow-md transition-shadow">
     <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center overflow-hidden">
       {ex.image_url ? (
@@ -121,27 +90,20 @@ const ExerciseCard = ({ ex, onView }: { ex: Exercise; onView: (e: Exercise) => v
     <CardHeader className="pb-3">
       <CardTitle className="text-lg">{ex.name}</CardTitle>
       <div className="flex flex-wrap gap-1.5 mt-1">
-        {ex.exercise_type && <Badge variant="secondary" className="capitalize">{ex.exercise_type}</Badge>}
-        {ex.body_region && <Badge variant="outline" className="capitalize">{ex.body_region.replace("-", " / ")}</Badge>}
+        {ex.rehab_phase && <Badge variant="secondary">{REHAB_PHASE_LABELS[ex.rehab_phase] || ex.rehab_phase}</Badge>}
         {ex.difficulty && <Badge variant="outline" className="capitalize">{ex.difficulty}</Badge>}
       </div>
     </CardHeader>
     <CardContent className="flex-1 flex flex-col gap-3 text-sm">
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <div><span className="text-muted-foreground">Equipment:</span> <span className="font-medium">{ex.equipment || "None"}</span></div>
-        <div><span className="text-muted-foreground">Dose:</span> <span className="font-medium">{ex.sets_reps_or_hold_time || "—"}</span></div>
+      <div className="text-xs">
+        <span className="text-muted-foreground">Equipment:</span>{" "}
+        <span className="font-medium">{ex.equipment || "None"}</span>
       </div>
-      {ex.instructions && <p className="text-muted-foreground line-clamp-3">{ex.instructions}</p>}
-      {ex.you_should_feel && (
-        <div className="bg-primary/5 border border-primary/20 rounded-md p-2.5">
-          <p className="text-xs font-semibold text-primary mb-0.5">You should feel</p>
-          <p className="text-xs text-foreground/80">{ex.you_should_feel}</p>
-        </div>
-      )}
-      {ex.stop_if && (
+      {ex.description && <p className="text-muted-foreground line-clamp-3">{ex.description}</p>}
+      {ex.precautions && (
         <div className="bg-destructive/5 border border-destructive/20 rounded-md p-2.5">
-          <p className="text-xs font-semibold text-destructive mb-0.5">Stop if</p>
-          <p className="text-xs text-foreground/80">{ex.stop_if}</p>
+          <p className="text-xs font-semibold text-destructive mb-0.5">Precautions</p>
+          <p className="text-xs text-foreground/80 line-clamp-2">{ex.precautions}</p>
         </div>
       )}
       <Button variant="outline" size="sm" className="mt-auto" onClick={() => onView(ex)}>View Details</Button>
@@ -150,9 +112,15 @@ const ExerciseCard = ({ ex, onView }: { ex: Exercise; onView: (e: Exercise) => v
 );
 
 // ---------- Detail Modal ----------
-const DetailModal = ({ ex, allExercises, onClose, onView }: { ex: Exercise | null; allExercises: Exercise[]; onClose: () => void; onView: (e: Exercise) => void }) => {
+const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <div>
+    <h4 className="font-semibold text-foreground mb-1.5">{title}</h4>
+    <div className="text-foreground/80">{children}</div>
+  </div>
+);
+
+const DetailModal = ({ ex, onClose }: { ex: RehabExercise | null; onClose: () => void }) => {
   if (!ex) return null;
-  const related = (ex.related_exercises || []).map((id) => allExercises.find((e) => e.id === id)).filter(Boolean) as Exercise[];
   return (
     <Dialog open={!!ex} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -161,46 +129,35 @@ const DetailModal = ({ ex, allExercises, onClose, onView }: { ex: Exercise | nul
         </DialogHeader>
         <div className="space-y-5 text-sm">
           <div className="flex flex-wrap gap-1.5">
-            {ex.exercise_type && <Badge variant="secondary" className="capitalize">{ex.exercise_type}</Badge>}
-            {ex.body_region && <Badge variant="outline" className="capitalize">{ex.body_region.replace("-", " / ")}</Badge>}
+            {ex.rehab_phase && <Badge variant="secondary">{REHAB_PHASE_LABELS[ex.rehab_phase] || ex.rehab_phase}</Badge>}
             {ex.difficulty && <Badge variant="outline" className="capitalize">{ex.difficulty}</Badge>}
             {ex.equipment && <Badge variant="outline">{ex.equipment}</Badge>}
           </div>
           {ex.image_url && <img src={ex.image_url} alt={ex.name} className="w-full rounded-lg" />}
-          {ex.purpose && <Section title="Purpose">{ex.purpose}</Section>}
-          {ex.instructions && <Section title="Step-by-step Instructions"><p className="whitespace-pre-line">{ex.instructions}</p></Section>}
-          {ex.sets_reps_or_hold_time && <Section title="Sets / Reps / Hold Time">{ex.sets_reps_or_hold_time}</Section>}
-          {ex.you_should_feel && (
-            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-              <p className="text-sm font-semibold text-primary mb-1">You should feel</p>
-              <p className="text-foreground/80">{ex.you_should_feel}</p>
-            </div>
-          )}
-          {ex.stop_if && (
-            <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3">
-              <p className="text-sm font-semibold text-destructive mb-1">Stop if</p>
-              <p className="text-foreground/80">{ex.stop_if}</p>
-            </div>
-          )}
-          {ex.common_mistakes && <Section title="Common Mistakes"><p className="whitespace-pre-line">{ex.common_mistakes}</p></Section>}
-          {ex.safety_tips && <Section title="Safety Tips"><p className="whitespace-pre-line">{ex.safety_tips}</p></Section>}
-          {(ex.diagnosis_tags?.length || ex.body_region) && (
-            <Section title="Commonly Used For">
-              <div className="flex flex-wrap gap-1.5">
-                {ex.body_region && <Badge variant="outline" className="capitalize">{ex.body_region.replace("-", " / ")}</Badge>}
-                {ex.diagnosis_tags?.map((t) => {
-                  const dx = DIAGNOSES.find((d) => d.slug === t);
-                  return <Badge key={t} variant="outline">{dx?.name || t}</Badge>;
-                })}
-              </div>
+          {ex.video_url && (
+            <Section title="Video">
+              <a href={ex.video_url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                {ex.video_url}
+              </a>
             </Section>
           )}
-          {related.length > 0 && (
-            <Section title="Related Exercises">
-              <div className="flex flex-wrap gap-2">
-                {related.map((r) => (
-                  <Button key={r.id} variant="outline" size="sm" onClick={() => onView(r)}>{r.name}</Button>
-                ))}
+          {ex.description && <Section title="Overview">{ex.description}</Section>}
+          {ex.instructions && (
+            <Section title="Step-by-step Instructions">
+              <p className="whitespace-pre-line">{ex.instructions}</p>
+            </Section>
+          )}
+          {ex.precautions && (
+            <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3">
+              <p className="text-sm font-semibold text-destructive mb-1">Precautions / Stop if</p>
+              <p className="text-foreground/80 whitespace-pre-line">{ex.precautions}</p>
+            </div>
+          )}
+          {(ex.location_names.length > 0 || ex.pathology_names.length > 0) && (
+            <Section title="Commonly Used For">
+              <div className="flex flex-wrap gap-1.5">
+                {ex.location_names.map((n) => <Badge key={`l-${n}`} variant="outline">{n}</Badge>)}
+                {ex.pathology_names.map((n) => <Badge key={`p-${n}`} variant="outline">{n}</Badge>)}
               </div>
             </Section>
           )}
@@ -209,15 +166,9 @@ const DetailModal = ({ ex, allExercises, onClose, onView }: { ex: Exercise | nul
     </Dialog>
   );
 };
-const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div>
-    <h4 className="font-semibold text-foreground mb-1.5">{title}</h4>
-    <div className="text-foreground/80">{children}</div>
-  </div>
-);
 
 // ---------- Filter Bar ----------
-type Filters = { type: string; equipment: string; difficulty: string };
+type Filters = { phase: string; equipment: string; difficulty: string };
 const FilterBar = ({ filters, setFilters, search, setSearch, equipmentOptions }: {
   filters: Filters; setFilters: (f: Filters) => void; search: string; setSearch: (s: string) => void; equipmentOptions: string[];
 }) => (
@@ -226,13 +177,13 @@ const FilterBar = ({ filters, setFilters, search, setSearch, equipmentOptions }:
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
       <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search exercises..." className="pl-9" />
     </div>
-    <Select value={filters.type} onValueChange={(v) => setFilters({ ...filters, type: v })}>
-      <SelectTrigger><SelectValue placeholder="All Types" /></SelectTrigger>
+    <Select value={filters.phase} onValueChange={(v) => setFilters({ ...filters, phase: v })}>
+      <SelectTrigger><SelectValue placeholder="All Phases" /></SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">All Types</SelectItem>
-        <SelectItem value="stretch">Stretch</SelectItem>
-        <SelectItem value="mobility">Mobility</SelectItem>
-        <SelectItem value="strengthening">Strengthening</SelectItem>
+        <SelectItem value="all">All Phases</SelectItem>
+        {REHAB_PHASE_ORDER.map((p) => (
+          <SelectItem key={p} value={p}>{REHAB_PHASE_LABELS[p]}</SelectItem>
+        ))}
       </SelectContent>
     </Select>
     <Select value={filters.equipment} onValueChange={(v) => setFilters({ ...filters, equipment: v })}>
@@ -255,23 +206,32 @@ const FilterBar = ({ filters, setFilters, search, setSearch, equipmentOptions }:
 );
 
 // ---------- Grouped exercise list ----------
-const GroupedExercises = ({ exercises, labels, onView }: { exercises: Exercise[]; labels: Record<string, string>; onView: (e: Exercise) => void }) => {
-  const order = ["mobility", "stretch", "strengthening"];
-  const grouped = order
-    .map((t) => ({ type: t, label: labels[t], items: exercises.filter((e) => e.exercise_type === t) }))
+const EmptyState = ({ message }: { message: string }) => (
+  <div className="text-center py-16 border border-dashed border-border rounded-lg">
+    <Activity className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
+    <p className="text-muted-foreground">{message}</p>
+  </div>
+);
+
+const GroupedExercises = ({ exercises, onView, emptyMessage }: {
+  exercises: RehabExercise[]; onView: (e: RehabExercise) => void; emptyMessage?: string;
+}) => {
+  const grouped = REHAB_PHASE_ORDER
+    .map((p) => ({ phase: p, label: REHAB_PHASE_LABELS[p], items: exercises.filter((e) => e.rehab_phase === p) }))
     .filter((g) => g.items.length > 0);
 
+  const unphased = exercises.filter((e) => !e.rehab_phase || !REHAB_PHASE_ORDER.includes(e.rehab_phase));
+  if (unphased.length > 0) {
+    grouped.push({ phase: "other", label: "Other", items: unphased });
+  }
+
   if (grouped.length === 0) {
-    return (
-      <div className="text-center py-12 text-muted-foreground">
-        <p>No exercises found. Try adjusting your filters.</p>
-      </div>
-    );
+    return <EmptyState message={emptyMessage || "No active exercises match your filters yet."} />;
   }
   return (
     <div className="space-y-10">
       {grouped.map((g) => (
-        <section key={g.type}>
+        <section key={g.phase}>
           <h2 className="text-2xl font-bold text-foreground mb-4 pb-2 border-b">{g.label}</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {g.items.map((ex) => <ExerciseCard key={ex.id} ex={ex} onView={onView} />)}
@@ -282,26 +242,26 @@ const GroupedExercises = ({ exercises, labels, onView }: { exercises: Exercise[]
   );
 };
 
-// ---------- Hooks ----------
-const useExercises = () => {
-  const [data, setData] = useState<Exercise[]>([]);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    supabase.from("exercises").select("*").eq("published", true).order("name").then(({ data }) => {
-      setData((data as Exercise[]) || []);
-      setLoading(false);
-    });
-  }, []);
-  return { data, loading };
-};
-
-const useFiltered = (exercises: Exercise[]) => {
+// ---------- Filtering hook ----------
+const useFiltered = (exercises: RehabExercise[]) => {
   const [search, setSearch] = useState("");
-  const [filters, setFilters] = useState<Filters>({ type: "all", equipment: "all", difficulty: "all" });
-  const equipmentOptions = useMemo(() => Array.from(new Set(exercises.map((e) => e.equipment).filter(Boolean) as string[])).sort(), [exercises]);
+  const [filters, setFilters] = useState<Filters>({ phase: "all", equipment: "all", difficulty: "all" });
+  const equipmentOptions = useMemo(
+    () => Array.from(new Set(exercises.map((e) => e.equipment).filter(Boolean) as string[])).sort(),
+    [exercises]
+  );
   const filtered = useMemo(() => exercises.filter((e) => {
-    if (search && !`${e.name} ${e.description || ""}`.toLowerCase().includes(search.toLowerCase())) return false;
-    if (filters.type !== "all" && e.exercise_type !== filters.type) return false;
+    if (search) {
+      const haystack = [
+        e.name,
+        e.description || "",
+        e.instructions || "",
+        ...e.location_names,
+        ...e.pathology_names,
+      ].join(" ").toLowerCase();
+      if (!haystack.includes(search.toLowerCase())) return false;
+    }
+    if (filters.phase !== "all" && e.rehab_phase !== filters.phase) return false;
     if (filters.equipment !== "all" && e.equipment !== filters.equipment) return false;
     if (filters.difficulty !== "all" && e.difficulty !== filters.difficulty) return false;
     return true;
@@ -389,17 +349,52 @@ const PathwayList = ({ title, items, basePath, crumb }: { title: string; items: 
   </Layout>
 );
 
-export const DiagnosisList = () => <PathwayList title="Exercises by Diagnosis" items={DIAGNOSES} basePath="/exercise-library/diagnosis" crumb="Exercises by Diagnosis" />;
-export const RegionList = () => <PathwayList title="Exercises by Body Region" items={REGIONS} basePath="/exercise-library/region" crumb="Exercises by Body Region" />;
-export const JointHealthList = () => <PathwayList title="General Joint Health" items={JOINT_HEALTH} basePath="/exercise-library/joint-health" crumb="General Joint Health" />;
+// Dynamic pathway lists pulled from the same tables the admin manages.
+export const DiagnosisList = () => {
+  const [items, setItems] = useState<{ slug: string; name: string }[]>(DIAGNOSES);
+  useEffect(() => {
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.from("pathologies").select("slug, name").order("name").then(({ data }) => {
+        if (data && data.length > 0) setItems(data as any);
+      });
+    });
+  }, []);
+  return <PathwayList title="Exercises by Diagnosis" items={items} basePath="/exercise-library/diagnosis" crumb="Exercises by Diagnosis" />;
+};
+
+export const RegionList = () => {
+  const [items, setItems] = useState<{ slug: string; name: string }[]>(REGIONS);
+  useEffect(() => {
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.from("body_locations").select("slug, name").order("name").then(({ data }) => {
+        if (data && data.length > 0) setItems(data as any);
+      });
+    });
+  }, []);
+  return <PathwayList title="Exercises by Body Region" items={items} basePath="/exercise-library/region" crumb="Exercises by Body Region" />;
+};
+
+export const JointHealthList = () => {
+  const [items, setItems] = useState<{ slug: string; name: string }[]>(JOINT_HEALTH);
+  useEffect(() => {
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.from("body_locations").select("slug, name").order("name").then(({ data }) => {
+        if (data && data.length > 0) {
+          setItems(data.map((d: any) => ({ slug: d.slug, name: `${d.name} Health` })));
+        }
+      });
+    });
+  }, []);
+  return <PathwayList title="General Joint Health" items={items} basePath="/exercise-library/joint-health" crumb="General Joint Health" />;
+};
 
 const PathwayDetail = ({
-  pageTitle, crumbParent, crumbParentTo, crumbCurrent, predicate, labels, exercises, loading,
+  pageTitle, crumbParent, crumbParentTo, crumbCurrent, predicate, exercises, loading, emptyMessage,
 }: {
   pageTitle: string; crumbParent: string; crumbParentTo: string; crumbCurrent: string;
-  predicate: (e: Exercise) => boolean; labels: Record<string, string>; exercises: Exercise[]; loading: boolean;
+  predicate: (e: RehabExercise) => boolean; exercises: RehabExercise[]; loading: boolean; emptyMessage?: string;
 }) => {
-  const [active, setActive] = useState<Exercise | null>(null);
+  const [active, setActive] = useState<RehabExercise | null>(null);
   const scoped = useMemo(() => exercises.filter(predicate), [exercises, predicate]);
   const { filtered, search, setSearch, filters, setFilters, equipmentOptions } = useFiltered(scoped);
 
@@ -418,75 +413,84 @@ const PathwayDetail = ({
           {loading ? (
             <p className="text-center py-12 text-muted-foreground">Loading exercises...</p>
           ) : (
-            <GroupedExercises exercises={filtered} labels={labels} onView={setActive} />
+            <GroupedExercises exercises={filtered} onView={setActive} emptyMessage={emptyMessage} />
           )}
         </div>
       </section>
-      <DetailModal ex={active} allExercises={exercises} onClose={() => setActive(null)} onView={setActive} />
+      <DetailModal ex={active} onClose={() => setActive(null)} />
     </Layout>
   );
 };
 
 export const DiagnosisDetail = () => {
   const { slug = "" } = useParams();
+  const { data, loading } = useRehabExercises();
   const dx = DIAGNOSES.find((d) => d.slug === slug);
-  const { data, loading } = useExercises();
-  if (!dx) return <Layout><div className="container mx-auto px-4 py-20 text-center">Diagnosis not found.</div></Layout>;
+  const displayName = dx?.name ||
+    data.find((e) => e.pathology_slugs.includes(slug))?.pathology_names[
+      data.find((e) => e.pathology_slugs.includes(slug))?.pathology_slugs.indexOf(slug) ?? 0
+    ] || slug;
   return (
     <PathwayDetail
-      pageTitle={dx.name}
+      pageTitle={displayName}
       crumbParent="Exercises by Diagnosis"
       crumbParentTo="/exercise-library/diagnosis"
-      crumbCurrent={dx.name}
-      predicate={(e) => (e.diagnosis_tags || []).includes(slug)}
-      labels={TYPE_LABELS}
+      crumbCurrent={displayName}
+      predicate={(e) => e.pathology_slugs.includes(slug)}
       exercises={data}
       loading={loading}
+      emptyMessage="No exercises have been linked to this diagnosis yet."
     />
   );
 };
 
 export const RegionDetail = () => {
   const { slug = "" } = useParams();
+  const { data, loading } = useRehabExercises();
   const region = REGIONS.find((r) => r.slug === slug);
-  const { data, loading } = useExercises();
-  if (!region) return <Layout><div className="container mx-auto px-4 py-20 text-center">Body region not found.</div></Layout>;
+  const displayName = region?.name ||
+    data.find((e) => e.location_slugs.includes(slug))?.location_names[
+      data.find((e) => e.location_slugs.includes(slug))?.location_slugs.indexOf(slug) ?? 0
+    ] || slug;
   return (
     <PathwayDetail
-      pageTitle={region.name}
+      pageTitle={displayName}
       crumbParent="Exercises by Body Region"
       crumbParentTo="/exercise-library/region"
-      crumbCurrent={region.name}
-      predicate={(e) => e.body_region === slug}
-      labels={TYPE_LABELS}
+      crumbCurrent={displayName}
+      predicate={(e) => e.location_slugs.includes(slug)}
       exercises={data}
       loading={loading}
+      emptyMessage="No exercises have been linked to this body region yet."
     />
   );
 };
 
 export const JointHealthDetail = () => {
   const { slug = "" } = useParams();
+  const { data, loading } = useRehabExercises();
   const cat = JOINT_HEALTH.find((j) => j.slug === slug);
-  const { data, loading } = useExercises();
-  if (!cat) return <Layout><div className="container mx-auto px-4 py-20 text-center">Category not found.</div></Layout>;
+  const displayName = cat?.name ||
+    `${data.find((e) => e.location_slugs.includes(slug))?.location_names[
+      data.find((e) => e.location_slugs.includes(slug))?.location_slugs.indexOf(slug) ?? 0
+    ] || slug} Health`;
   return (
     <PathwayDetail
-      pageTitle={cat.name}
+      pageTitle={displayName}
       crumbParent="General Joint Health"
       crumbParentTo="/exercise-library/joint-health"
-      crumbCurrent={cat.name}
-      predicate={(e) => e.joint_health_category === slug}
-      labels={TYPE_LABELS_JOINT}
+      crumbCurrent={displayName}
+      predicate={(e) => e.location_slugs.includes(slug) && e.rehab_phase === "maintenance"}
       exercises={data}
       loading={loading}
+      emptyMessage="No general joint health routines have been added for this area yet."
     />
   );
 };
 
 export const ExerciseSearch = () => {
-  const [active, setActive] = useState<Exercise | null>(null);
-  const { data, loading } = useExercises();
+  const [active, setActive] = useState<RehabExercise | null>(null);
+  const { data, loading } = useRehabExercises();
   const params = new URLSearchParams(window.location.search);
   const initialQ = params.get("q") || "";
   const { filtered, search, setSearch, filters, setFilters, equipmentOptions } = useFiltered(data);
@@ -502,11 +506,11 @@ export const ExerciseSearch = () => {
           {loading ? (
             <p className="text-center py-12 text-muted-foreground">Loading...</p>
           ) : (
-            <GroupedExercises exercises={filtered} labels={TYPE_LABELS} onView={setActive} />
+            <GroupedExercises exercises={filtered} onView={setActive} emptyMessage="No exercises match your search." />
           )}
         </div>
       </section>
-      <DetailModal ex={active} allExercises={data} onClose={() => setActive(null)} onView={setActive} />
+      <DetailModal ex={active} onClose={() => setActive(null)} />
     </Layout>
   );
 };
