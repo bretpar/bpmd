@@ -1,0 +1,1 @@
+ALTER TABLE public.rehab_exercises ADD COLUMN IF NOT EXISTS is_general_exercise boolean NOT NULL DEFAULT false;
