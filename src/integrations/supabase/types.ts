@@ -17,23 +17,32 @@ export type Database = {
       body_locations: {
         Row: {
           created_at: string
+          description: string | null
           id: string
+          is_active: boolean
           name: string
           slug: string
+          sort_order: number
           updated_at: string
         }
         Insert: {
           created_at?: string
+          description?: string | null
           id?: string
+          is_active?: boolean
           name: string
           slug: string
+          sort_order?: number
           updated_at?: string
         }
         Update: {
           created_at?: string
+          description?: string | null
           id?: string
+          is_active?: boolean
           name?: string
           slug?: string
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []
@@ -207,25 +216,37 @@ export type Database = {
         Row: {
           body_location_id: string | null
           created_at: string
+          full_description: string | null
           id: string
+          is_active: boolean
           name: string
+          short_description: string | null
           slug: string
+          sort_order: number
           updated_at: string
         }
         Insert: {
           body_location_id?: string | null
           created_at?: string
+          full_description?: string | null
           id?: string
+          is_active?: boolean
           name: string
+          short_description?: string | null
           slug: string
+          sort_order?: number
           updated_at?: string
         }
         Update: {
           body_location_id?: string | null
           created_at?: string
+          full_description?: string | null
           id?: string
+          is_active?: boolean
           name?: string
+          short_description?: string | null
           slug?: string
+          sort_order?: number
           updated_at?: string
         }
         Relationships: [
@@ -234,6 +255,36 @@ export type Database = {
             columns: ["body_location_id"]
             isOneToOne: false
             referencedRelation: "body_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathology_locations: {
+        Row: {
+          body_location_id: string
+          pathology_id: string
+        }
+        Insert: {
+          body_location_id: string
+          pathology_id: string
+        }
+        Update: {
+          body_location_id?: string
+          pathology_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathology_locations_body_location_id_fkey"
+            columns: ["body_location_id"]
+            isOneToOne: false
+            referencedRelation: "body_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathology_locations_pathology_id_fkey"
+            columns: ["pathology_id"]
+            isOneToOne: false
+            referencedRelation: "pathologies"
             referencedColumns: ["id"]
           },
         ]
@@ -366,6 +417,7 @@ export type Database = {
           rehab_phase: string | null
           short_description: string | null
           slug: string
+          sort_order: number
           title: string
           updated_at: string
           video_url: string | null
@@ -383,6 +435,7 @@ export type Database = {
           rehab_phase?: string | null
           short_description?: string | null
           slug: string
+          sort_order?: number
           title: string
           updated_at?: string
           video_url?: string | null
@@ -400,6 +453,7 @@ export type Database = {
           rehab_phase?: string | null
           short_description?: string | null
           slug?: string
+          sort_order?: number
           title?: string
           updated_at?: string
           video_url?: string | null
