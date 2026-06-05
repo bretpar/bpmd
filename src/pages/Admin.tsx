@@ -154,12 +154,14 @@ const Row = ({
   title,
   subtitle,
   right,
+  actions,
   onEdit,
   onDelete,
 }: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   right?: React.ReactNode;
+  actions?: React.ReactNode;
   onEdit: () => void;
   onDelete: () => void;
 }) => (
@@ -169,6 +171,7 @@ const Row = ({
       {subtitle && <div className="text-xs text-muted-foreground mt-0.5">{subtitle}</div>}
     </div>
     {right}
+    {actions}
     <div className="flex gap-1 shrink-0">
       <Button size="sm" variant="ghost" onClick={onEdit}><Pencil className="w-4 h-4" /></Button>
       <Button size="sm" variant="ghost" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
