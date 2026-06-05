@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import { AlertCircle, CheckCircle2, FileSpreadsheet, Upload } from "lucide-react";
@@ -35,8 +37,8 @@ const PHASE_MAP: Record<string, string> = {
   maintenance: "maintenance",
 };
 
-const parseBool = (v: any): boolean => {
-  if (v === undefined || v === null || v === "") return true;
+const parseBoolOrNull = (v: any): boolean | null => {
+  if (v === undefined || v === null || v === "") return null;
   const s = String(v).trim().toLowerCase();
   return !["false", "no", "0", "inactive", "off"].includes(s);
 };
@@ -54,6 +56,17 @@ const pick = (row: any, ...keys: string[]) => {
   return "";
 };
 
+const hasKey = (row: any, ...keys: string[]) => {
+  const map: Record<string, any> = {};
+  Object.keys(row).forEach((k) => (map[k.trim().toLowerCase()] = row[k]));
+  return keys.some((k) => {
+    const v = map[k.toLowerCase()];
+    return v !== undefined && v !== null && String(v).trim() !== "";
+  });
+};
+
+type Action = "create" | "update" | "skip";
+
 type InjuryRow = {
   rowIndex: number;
   name: string;
@@ -63,9 +76,9 @@ type InjuryRow = {
   assigned_joints_raw: string;
   joint_slugs: string[];
   joint_ids: string[];
-  sort_order: number;
-  is_active: boolean;
-  action: "create" | "update";
+  sort_order: number | null;
+  is_active: boolean | null;
+  action: Action;
   existingId?: string;
   errors: string[];
 };
@@ -86,10 +99,10 @@ type ExerciseRow = {
   precautions: string;
   image_url: string;
   video_url: string;
-  sort_order: number;
-  is_active: boolean;
-  is_general_exercise: boolean;
-  action: "create" | "update";
+  sort_order: number | null;
+  is_active: boolean | null;
+  is_general_exercise: boolean | null;
+  action: Action;
   existingId?: string;
   errors: string[];
 };
@@ -107,6 +120,8 @@ export default function ImportAdmin() {
   const [injuries, setInjuries] = useState<InjuryRow[]>([]);
   const [exercises, setExercises] = useState<ExerciseRow[]>([]);
   const [done, setDone] = useState<string | null>(null);
+  const [mergeExisting, setMergeExisting] = useState(true);
+  const [replaceRelationships, setReplaceRelationships] = useState(false);
 
   const reset = () => {
     setInjuries([]);
@@ -144,7 +159,6 @@ export default function ImportAdmin() {
         return;
       }
 
-      // Load existing data for matching
       const [{ data: jointsData }, { data: pathData }, { data: exData }] = await Promise.all([
         sb.from("body_locations").select("id, name, slug"),
         sb.from("pathologies").select("id, name, slug"),
@@ -164,8 +178,6 @@ export default function ImportAdmin() {
 
       const injRows: InjuryRow[] = [];
       const exRows: ExerciseRow[] = [];
-
-      // Track slugs we will create in injuries pass so exercises can reference them
       const stagedInjurySlugs = new Map<string, { name: string; joint_ids: string[] }>();
 
       if (injSheet) {
@@ -178,10 +190,11 @@ export default function ImportAdmin() {
           const short_description = norm(pick(r, "Short description", "Short Description", "Short"));
           const full_description = norm(pick(r, "Full description", "Full Description", "Full"));
           const assigned = norm(pick(r, "Assigned joints", "Assigned Joints", "Joints"));
-          const sort_order = parseInt(norm(pick(r, "Sort order", "Sort Order", "Order")) || "0", 10) || 0;
-          const is_active = parseBool(pick(r, "Active", "Is Active"));
+          const sortRaw = norm(pick(r, "Sort order", "Sort Order", "Order"));
+          const sort_order = sortRaw ? parseInt(sortRaw, 10) || 0 : null;
+          const is_active = parseBoolOrNull(pick(r, "Active", "Is Active"));
 
-          if (!name && !slug) return; // skip blank rows
+          if (!name && !slug) return;
           if (!name) errors.push("Name is required");
           if (!slug) slug = slugify(name);
           if (slugSeen.has(slug)) errors.push(`Duplicate slug in file: ${slug}`);
@@ -201,7 +214,8 @@ export default function ImportAdmin() {
           });
 
           const existing = pathBySlug.get(slug.toLowerCase());
-          const row: InjuryRow = {
+          const action: Action = errors.length ? "skip" : existing ? "update" : "create";
+          injRows.push({
             rowIndex: i + 2,
             name,
             slug,
@@ -212,11 +226,10 @@ export default function ImportAdmin() {
             joint_ids,
             sort_order,
             is_active,
-            action: existing ? "update" : "create",
+            action,
             existingId: existing?.id,
             errors,
-          };
-          injRows.push(row);
+          });
           stagedInjurySlugs.set(slug.toLowerCase(), { name, joint_ids });
         });
       }
@@ -237,14 +250,14 @@ export default function ImportAdmin() {
           const precautions = norm(pick(r, "Precautions"));
           const image_url = norm(pick(r, "Image URL", "Image"));
           const video_url = norm(pick(r, "Video URL", "Video"));
-          const sort_order = parseInt(norm(pick(r, "Sort order", "Sort Order", "Order")) || "0", 10) || 0;
-          const is_active = parseBool(pick(r, "Active", "Is Active"));
-          const is_general_exercise = (() => {
-            const v = pick(r, "General joint exercise", "General Joint Exercise", "General");
-            if (v === "" || v === undefined || v === null) return false;
-            const s = String(v).trim().toLowerCase();
-            return ["true", "yes", "1", "y", "general"].includes(s);
-          })();
+          const sortRaw = norm(pick(r, "Sort order", "Sort Order", "Order"));
+          const sort_order = sortRaw ? parseInt(sortRaw, 10) || 0 : null;
+          const is_active = parseBoolOrNull(pick(r, "Active", "Is Active"));
+          const genRaw = pick(r, "General joint exercise", "General Joint Exercise", "General");
+          const is_general_exercise =
+            genRaw === "" || genRaw === undefined || genRaw === null
+              ? null
+              : ["true", "yes", "1", "y", "general"].includes(String(genRaw).trim().toLowerCase());
 
           if (!title && !slug) return;
           if (!title) errors.push("Title is required");
@@ -284,14 +297,12 @@ export default function ImportAdmin() {
             }
           });
 
-          // derive joints from matched existing injuries
-          // (staged ones already added above; existing ones need lookup of their joints later — done at import time)
-
-          if (!is_general_exercise && injuryTokens.length === 0) {
+          const existing = existingExBySlug.get(slug);
+          if (!existing && !is_general_exercise && injuryTokens.length === 0) {
             errors.push("Assigned injuries required unless marked as a general joint exercise");
           }
 
-          const existing = existingExBySlug.get(slug);
+          const action: Action = errors.length ? "skip" : existing ? "update" : "create";
           exRows.push({
             rowIndex: i + 2,
             title,
@@ -311,7 +322,7 @@ export default function ImportAdmin() {
             sort_order,
             is_active,
             is_general_exercise,
-            action: existing ? "update" : "create",
+            action,
             existingId: existing,
             errors,
           });
@@ -331,54 +342,79 @@ export default function ImportAdmin() {
     injuries.reduce((n, r) => n + r.errors.length, 0) +
     exercises.reduce((n, r) => n + r.errors.length, 0);
 
-  const canImport =
-    !importing && !parsing && (injuries.length > 0 || exercises.length > 0) && totalErrors === 0;
+  const importableCount =
+    injuries.filter((r) => r.action !== "skip").length +
+    exercises.filter((r) => r.action !== "skip").length;
+
+  const canImport = !importing && !parsing && importableCount > 0;
+
+  // Set null/empty fields to existing value, but only when merging
+  const mergeField = <T,>(incoming: T | null | undefined | "", existing: T | undefined): T | undefined => {
+    if (incoming === null || incoming === undefined || incoming === "") return existing;
+    return incoming as T;
+  };
 
   const runImport = async () => {
     setImporting(true);
     setDone(null);
     try {
-      let injCreated = 0;
-      let injUpdated = 0;
-      let exCreated = 0;
-      let exUpdated = 0;
-
-      // Resolve injuries first so exercises can reference newly-created slugs
-      const slugToPathId = new Map<string, string>();
-      const slugToJointIds = new Map<string, string[]>();
+      let injCreated = 0, injUpdated = 0, injSkipped = 0;
+      let exCreated = 0, exUpdated = 0, exSkipped = 0;
 
       for (const r of injuries) {
-        const payload = {
-          name: r.name,
-          slug: r.slug,
-          short_description: r.short_description || null,
-          full_description: r.full_description || null,
-          sort_order: r.sort_order,
-          is_active: r.is_active,
-          body_location_id: r.joint_ids[0] || null,
-        };
+        if (r.action === "skip") { injSkipped++; continue; }
+
         let id = r.existingId;
         if (id) {
+          // Fetch existing record for merging
+          const { data: existing } = await sb.from("pathologies").select("*").eq("id", id).maybeSingle();
+          const payload = mergeExisting
+            ? {
+                name: r.name || existing?.name,
+                short_description: mergeField(r.short_description, existing?.short_description) ?? null,
+                full_description: mergeField(r.full_description, existing?.full_description) ?? null,
+                sort_order: r.sort_order ?? existing?.sort_order ?? 0,
+                is_active: r.is_active ?? existing?.is_active ?? true,
+                body_location_id: r.joint_ids[0] || existing?.body_location_id || null,
+              }
+            : {
+                name: r.name,
+                short_description: r.short_description || null,
+                full_description: r.full_description || null,
+                sort_order: r.sort_order ?? 0,
+                is_active: r.is_active ?? true,
+                body_location_id: r.joint_ids[0] || null,
+              };
           const { error } = await sb.from("pathologies").update(payload).eq("id", id);
           if (error) throw new Error(`Injury row ${r.rowIndex}: ${error.message}`);
           injUpdated++;
         } else {
+          const payload = {
+            name: r.name,
+            slug: r.slug,
+            short_description: r.short_description || null,
+            full_description: r.full_description || null,
+            sort_order: r.sort_order ?? 0,
+            is_active: r.is_active ?? true,
+            body_location_id: r.joint_ids[0] || null,
+          };
           const { data, error } = await sb.from("pathologies").insert(payload).select("id").single();
           if (error) throw new Error(`Injury row ${r.rowIndex}: ${error.message}`);
           id = data.id;
           injCreated++;
         }
-        await sb.from("pathology_locations").delete().eq("pathology_id", id);
-        if (r.joint_ids.length) {
-          await sb.from("pathology_locations").insert(
-            r.joint_ids.map((body_location_id) => ({ pathology_id: id, body_location_id }))
-          );
+
+        // Joints: merge or replace
+        if (replaceRelationships) {
+          await sb.from("pathology_locations").delete().eq("pathology_id", id);
         }
-        slugToPathId.set(r.slug.toLowerCase(), id!);
-        slugToJointIds.set(r.slug.toLowerCase(), r.joint_ids);
+        if (r.joint_ids.length) {
+          const rows = r.joint_ids.map((body_location_id) => ({ pathology_id: id, body_location_id }));
+          await sb.from("pathology_locations").upsert(rows, { onConflict: "pathology_id,body_location_id", ignoreDuplicates: true });
+        }
       }
 
-      // Re-fetch pathologies with their joints for any not in this import
+      // Re-fetch pathologies for exercise joint derivation
       const { data: pathData } = await sb.from("pathologies").select("id, slug");
       const allPathBySlug = new Map<string, string>((pathData || []).map((p: any) => [p.slug.toLowerCase(), p.id]));
       const { data: plData } = await sb.from("pathology_locations").select("pathology_id, body_location_id");
@@ -390,17 +426,17 @@ export default function ImportAdmin() {
       });
 
       for (const r of exercises) {
-        // Resolve injury_ids (combining pre-existing and newly-created)
+        if (r.action === "skip") { exSkipped++; continue; }
+
         const finalInjuryIds: string[] = [];
         const finalJointIds = new Set<string>(r.joint_ids);
         r.injury_slugs.forEach((s) => {
           const id = allPathBySlug.get(s.toLowerCase());
-          if (id) {
+          if (id && !finalInjuryIds.includes(id)) {
             finalInjuryIds.push(id);
             (jointsByPathId.get(id) || []).forEach((j) => finalJointIds.add(j));
           }
         });
-        // Also include direct injury_ids matched at parse time
         r.injury_ids.forEach((id) => {
           if (!finalInjuryIds.includes(id)) {
             finalInjuryIds.push(id);
@@ -408,56 +444,83 @@ export default function ImportAdmin() {
           }
         });
 
-        const instructions =
-          r.sets_reps_time
-            ? `${r.full_instructions ? r.full_instructions + "\n\n" : ""}Sets / Reps / Time: ${r.sets_reps_time}`
-            : r.full_instructions;
-
-        const payload = {
-          title: r.title,
-          slug: r.slug,
-          short_description: r.short_description || null,
-          full_instructions: instructions || null,
-          difficulty: r.difficulty,
-          rehab_phase: r.rehab_phase,
-          precautions: r.precautions || null,
-          image_url: r.image_url || null,
-          video_url: r.video_url || null,
-          sort_order: r.sort_order,
-          is_active: r.is_active,
-          is_general_exercise: r.is_general_exercise,
-        };
+        const instructions = r.sets_reps_time
+          ? `${r.full_instructions ? r.full_instructions + "\n\n" : ""}Sets / Reps / Time: ${r.sets_reps_time}`
+          : r.full_instructions;
 
         let id = r.existingId;
         if (id) {
+          const { data: existing } = await sb.from("rehab_exercises").select("*").eq("id", id).maybeSingle();
+          const payload = mergeExisting
+            ? {
+                title: r.title || existing?.title,
+                short_description: mergeField(r.short_description, existing?.short_description) ?? null,
+                full_instructions: mergeField(instructions, existing?.full_instructions) ?? null,
+                difficulty: r.difficulty ?? existing?.difficulty ?? null,
+                rehab_phase: r.rehab_phase ?? existing?.rehab_phase ?? null,
+                precautions: mergeField(r.precautions, existing?.precautions) ?? null,
+                image_url: mergeField(r.image_url, existing?.image_url) ?? null,
+                video_url: mergeField(r.video_url, existing?.video_url) ?? null,
+                sort_order: r.sort_order ?? existing?.sort_order ?? 0,
+                is_active: r.is_active ?? existing?.is_active ?? true,
+                is_general_exercise: r.is_general_exercise ?? existing?.is_general_exercise ?? false,
+              }
+            : {
+                title: r.title,
+                short_description: r.short_description || null,
+                full_instructions: instructions || null,
+                difficulty: r.difficulty,
+                rehab_phase: r.rehab_phase,
+                precautions: r.precautions || null,
+                image_url: r.image_url || null,
+                video_url: r.video_url || null,
+                sort_order: r.sort_order ?? 0,
+                is_active: r.is_active ?? true,
+                is_general_exercise: r.is_general_exercise ?? false,
+              };
           const { error } = await sb.from("rehab_exercises").update(payload).eq("id", id);
           if (error) throw new Error(`Exercise row ${r.rowIndex}: ${error.message}`);
           exUpdated++;
         } else {
+          const payload = {
+            title: r.title,
+            slug: r.slug,
+            short_description: r.short_description || null,
+            full_instructions: instructions || null,
+            difficulty: r.difficulty,
+            rehab_phase: r.rehab_phase,
+            precautions: r.precautions || null,
+            image_url: r.image_url || null,
+            video_url: r.video_url || null,
+            sort_order: r.sort_order ?? 0,
+            is_active: r.is_active ?? true,
+            is_general_exercise: r.is_general_exercise ?? false,
+          };
           const { data, error } = await sb.from("rehab_exercises").insert(payload).select("id").single();
           if (error) throw new Error(`Exercise row ${r.rowIndex}: ${error.message}`);
           id = data.id;
           exCreated++;
         }
 
-        await sb.from("rehab_exercise_pathologies").delete().eq("exercise_id", id);
-        await sb.from("rehab_exercise_locations").delete().eq("exercise_id", id);
-
+        // Relationships: merge (add only) or replace
+        if (replaceRelationships) {
+          await sb.from("rehab_exercise_pathologies").delete().eq("exercise_id", id);
+          await sb.from("rehab_exercise_locations").delete().eq("exercise_id", id);
+        }
         if (finalInjuryIds.length) {
-          await sb.from("rehab_exercise_pathologies").insert(
-            finalInjuryIds.map((pathology_id) => ({ exercise_id: id, pathology_id }))
-          );
+          const rows = finalInjuryIds.map((pathology_id) => ({ exercise_id: id, pathology_id }));
+          await sb.from("rehab_exercise_pathologies").upsert(rows, { onConflict: "exercise_id,pathology_id", ignoreDuplicates: true });
         }
         const jointIds = Array.from(finalJointIds);
         if (jointIds.length) {
-          await sb.from("rehab_exercise_locations").insert(
-            jointIds.map((body_location_id) => ({ exercise_id: id, body_location_id }))
-          );
+          const rows = jointIds.map((body_location_id) => ({ exercise_id: id, body_location_id }));
+          await sb.from("rehab_exercise_locations").upsert(rows, { onConflict: "exercise_id,body_location_id", ignoreDuplicates: true });
         }
       }
 
       setDone(
-        `Imported successfully: ${injCreated} injuries created, ${injUpdated} updated; ${exCreated} exercises created, ${exUpdated} updated.`
+        `Injuries: ${injCreated} created, ${injUpdated} updated, ${injSkipped} skipped. ` +
+        `Exercises: ${exCreated} created, ${exUpdated} updated, ${exSkipped} skipped.`
       );
       toast({ title: "Import complete" });
     } catch (e: any) {
@@ -469,6 +532,12 @@ export default function ImportAdmin() {
 
   const hasPreview = injuries.length > 0 || exercises.length > 0;
 
+  const actionBadge = (a: Action) => {
+    if (a === "create") return <Badge variant="default">create</Badge>;
+    if (a === "update") return <Badge variant="secondary">update</Badge>;
+    return <Badge variant="destructive">skip</Badge>;
+  };
+
   return (
     <div className="mt-6 space-y-6">
       <Card className="p-5">
@@ -478,8 +547,8 @@ export default function ImportAdmin() {
             <h2 className="font-semibold text-lg">Bulk import injuries & exercises</h2>
             <p className="text-sm text-muted-foreground mt-1">
               Upload a CSV or Excel file containing an <strong>Injuries</strong> sheet and/or an{" "}
-              <strong>Exercises</strong> sheet. Existing records are matched by slug and updated;
-              missing slugs are created.
+              <strong>Exercises</strong> sheet. Records are matched by slug — existing rows are updated,
+              new slugs are created, and rows with errors are skipped.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <Input
@@ -501,12 +570,45 @@ export default function ImportAdmin() {
                 </Button>
               )}
             </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="flex items-start gap-3 rounded-md border p-3">
+                <Switch
+                  id="merge-existing"
+                  checked={mergeExisting}
+                  onCheckedChange={setMergeExisting}
+                  disabled={importing}
+                />
+                <div className="flex-1">
+                  <Label htmlFor="merge-existing" className="font-medium">Merge with existing exercises</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    When ON, blank fields in the file preserve existing values. When OFF, fields are overwritten with the file values.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 rounded-md border p-3">
+                <Switch
+                  id="replace-rels"
+                  checked={replaceRelationships}
+                  onCheckedChange={setReplaceRelationships}
+                  disabled={importing}
+                />
+                <div className="flex-1">
+                  <Label htmlFor="replace-rels" className="font-medium">Replace existing relationships</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    When ON, existing joint/injury links are removed and replaced with the file's. When OFF (default), new links are added without removing existing ones.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <p className="text-xs text-muted-foreground mt-3">
               Injury columns: Name, Slug, Short description, Full description, Assigned joints, Sort
               order, Active. Exercise columns: Title, Slug, Short description, Full instructions,
               Assigned injuries, Difficulty (Easy/Moderate/Advanced), Rehab phase, Sets/reps/time,
               Precautions, Image URL, Video URL, Sort order, Active, General joint exercise. Use
-              semicolons to separate multiple joints or injuries.
+              semicolons to separate multiple joints or injuries. An exercise may belong to many joints
+              and injuries.
             </p>
           </div>
         </div>
@@ -531,8 +633,7 @@ export default function ImportAdmin() {
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>{totalErrors} issue{totalErrors === 1 ? "" : "s"} found</AlertTitle>
               <AlertDescription>
-                Fix the highlighted rows in your file and re-upload. Import is disabled until all
-                issues are resolved.
+                Rows with errors will be skipped during import. Fix them in your file and re-upload to import all rows.
               </AlertDescription>
             </Alert>
           ) : (
@@ -540,8 +641,7 @@ export default function ImportAdmin() {
               <CheckCircle2 className="h-4 w-4" />
               <AlertTitle>Ready to import</AlertTitle>
               <AlertDescription>
-                {injuries.length} injuries, {exercises.length} exercises. Review the preview below
-                and click Import.
+                {injuries.length} injuries, {exercises.length} exercises. Review the preview below and click Import.
               </AlertDescription>
             </Alert>
           )}
@@ -558,7 +658,6 @@ export default function ImportAdmin() {
                       <th className="p-2">Name</th>
                       <th className="p-2">Slug</th>
                       <th className="p-2">Joints</th>
-                      <th className="p-2">Active</th>
                       <th className="p-2">Issues</th>
                     </tr>
                   </thead>
@@ -566,15 +665,10 @@ export default function ImportAdmin() {
                     {injuries.map((r, i) => (
                       <tr key={i} className={`border-b ${r.errors.length ? "bg-destructive/5" : ""}`}>
                         <td className="p-2 text-muted-foreground">{r.rowIndex}</td>
-                        <td className="p-2">
-                          <Badge variant={r.action === "create" ? "default" : "secondary"}>
-                            {r.action}
-                          </Badge>
-                        </td>
+                        <td className="p-2">{actionBadge(r.action)}</td>
                         <td className="p-2 font-medium">{r.name}</td>
                         <td className="p-2 text-muted-foreground">{r.slug}</td>
                         <td className="p-2">{r.joint_slugs.join(", ")}</td>
-                        <td className="p-2">{r.is_active ? "Yes" : "No"}</td>
                         <td className="p-2 text-destructive text-xs">{r.errors.join("; ")}</td>
                       </tr>
                     ))}
@@ -599,7 +693,6 @@ export default function ImportAdmin() {
                       <th className="p-2">Difficulty</th>
                       <th className="p-2">Phase</th>
                       <th className="p-2">General</th>
-                      <th className="p-2">Active</th>
                       <th className="p-2">Issues</th>
                     </tr>
                   </thead>
@@ -607,18 +700,13 @@ export default function ImportAdmin() {
                     {exercises.map((r, i) => (
                       <tr key={i} className={`border-b ${r.errors.length ? "bg-destructive/5" : ""}`}>
                         <td className="p-2 text-muted-foreground">{r.rowIndex}</td>
-                        <td className="p-2">
-                          <Badge variant={r.action === "create" ? "default" : "secondary"}>
-                            {r.action}
-                          </Badge>
-                        </td>
+                        <td className="p-2">{actionBadge(r.action)}</td>
                         <td className="p-2 font-medium">{r.title}</td>
                         <td className="p-2 text-muted-foreground">{r.slug}</td>
                         <td className="p-2">{r.injury_slugs.join(", ")}</td>
                         <td className="p-2 capitalize">{r.difficulty || "—"}</td>
                         <td className="p-2">{r.rehab_phase || "—"}</td>
                         <td className="p-2">{r.is_general_exercise ? "Yes" : ""}</td>
-                        <td className="p-2">{r.is_active ? "Yes" : "No"}</td>
                         <td className="p-2 text-destructive text-xs">{r.errors.join("; ")}</td>
                       </tr>
                     ))}
@@ -634,7 +722,7 @@ export default function ImportAdmin() {
             </Button>
             <Button onClick={runImport} disabled={!canImport} className="gap-2">
               <Upload className="h-4 w-4" />
-              {importing ? "Importing…" : "Import"}
+              {importing ? "Importing…" : `Import ${importableCount} row${importableCount === 1 ? "" : "s"}`}
             </Button>
           </div>
         </>
