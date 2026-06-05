@@ -7,7 +7,6 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Services from "./pages/Services";
-import Resources from "./pages/Resources";
 import Ultrasound from "./pages/Ultrasound";
 import PTExercises from "./pages/PTExercises";
 import PTLocations from "./pages/PTLocations";
@@ -22,8 +21,6 @@ import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import ExerciseLibraryAdmin from "./pages/ExerciseLibraryAdmin";
-import Injuries from "./pages/Injuries";
-import InjuryDetail from "./pages/InjuryDetail";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 
