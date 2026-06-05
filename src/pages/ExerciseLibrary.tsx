@@ -211,6 +211,7 @@ const useBodyLocations = () => {
     (supabase as any)
       .from("body_locations")
       .select("id, slug, name")
+      .order("sort_order")
       .order("name")
       .then(({ data }: any) => {
         setItems(data || []);
