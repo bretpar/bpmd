@@ -881,11 +881,13 @@ const Admin = () => {
                 <TabsTrigger value="injuries">Injuries</TabsTrigger>
                 <TabsTrigger value="exercises">Exercises</TabsTrigger>
                 <TabsTrigger value="locations">PT Locations</TabsTrigger>
+                <TabsTrigger value="import">Import</TabsTrigger>
               </TabsList>
               <TabsContent value="joints"><JointsAdmin /></TabsContent>
               <TabsContent value="injuries"><InjuriesAdmin /></TabsContent>
               <TabsContent value="exercises"><ExercisesAdmin /></TabsContent>
               <TabsContent value="locations"><LocationsAdmin /></TabsContent>
+              <TabsContent value="import"><ImportAdmin /></TabsContent>
             </Tabs>
           </div>
         </section>
