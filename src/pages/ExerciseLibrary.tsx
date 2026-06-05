@@ -315,7 +315,7 @@ export const RegionDetail = () => {
         <div className="container mx-auto px-4 lg:px-8 max-w-3xl">
           <Crumbs
             items={[
-              { label: "Exercise Library", to: "/exercise-library" },
+              { label: "Therapy Exercises", to: "/exercise-library" },
               { label: displayName },
             ]}
           />
@@ -397,7 +397,7 @@ export const RegionGeneralDetail = () => {
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
           <Crumbs
             items={[
-              { label: "Exercise Library", to: "/exercise-library" },
+              { label: "Therapy Exercises", to: "/exercise-library" },
               { label: displayName, to: `/exercise-library/region/${slug}` },
               { label: "General Exercises" },
             ]}
@@ -448,7 +448,7 @@ export const RegionPathologyDetail = () => {
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
           <Crumbs
             items={[
-              { label: "Exercise Library", to: "/exercise-library" },
+              { label: "Therapy Exercises", to: "/exercise-library" },
               { label: displayName, to: `/exercise-library/region/${slug}` },
               { label: pathologyName },
             ]}
@@ -503,7 +503,7 @@ export const ExerciseSearch = () => {
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
           <Crumbs
             items={[
-              { label: "Exercise Library", to: "/exercise-library" },
+              { label: "Therapy Exercises", to: "/exercise-library" },
               { label: "Search" },
             ]}
           />
