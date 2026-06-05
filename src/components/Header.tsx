@@ -8,13 +8,14 @@ const baseNavLinks = [
   { label: "Home", path: "/" },
   { label: "About", path: "/about" },
   { label: "Services", path: "/services" },
-  { label: "Orthopedic Resources", path: "/resources" },
-  { label: "Injuries", path: "/injuries" },
-  { label: "Exercise Library", path: "/exercise-library" },
+  { label: "Therapy Exercises", path: "/exercise-library", matchPrefix: "/exercise-library" },
   { label: "PT Locations", path: "/pt-locations" },
   { label: "Ultrasound", path: "/ultrasound" },
   { label: "Contact", path: "/contact" },
 ];
+
+const isActive = (link: { path: string; matchPrefix?: string }, pathname: string) =>
+  link.matchPrefix ? pathname.startsWith(link.matchPrefix) : pathname === link.path;
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -41,7 +42,7 @@ const Header = () => {
               key={link.path}
               to={link.path}
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                location.pathname === link.path
+                isActive(link, location.pathname)
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
@@ -75,7 +76,7 @@ const Header = () => {
                 to={link.path}
                 onClick={() => setMobileOpen(false)}
                 className={`px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                  location.pathname === link.path
+                  isActive(link, location.pathname)
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}

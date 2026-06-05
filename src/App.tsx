@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,7 +7,6 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Services from "./pages/Services";
-import Resources from "./pages/Resources";
 import Ultrasound from "./pages/Ultrasound";
 import PTExercises from "./pages/PTExercises";
 import PTLocations from "./pages/PTLocations";
@@ -22,8 +21,6 @@ import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import ExerciseLibraryAdmin from "./pages/ExerciseLibraryAdmin";
-import Injuries from "./pages/Injuries";
-import InjuryDetail from "./pages/InjuryDetail";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -41,10 +38,11 @@ const App = () => (
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/services" element={<Services />} />
-            <Route path="/resources" element={<Resources />} />
+            <Route path="/resources" element={<Navigate to="/services" replace />} />
+            <Route path="/orthopedic-resources" element={<Navigate to="/services" replace />} />
             <Route path="/ultrasound" element={<Ultrasound />} />
-            <Route path="/injuries" element={<Injuries />} />
-            <Route path="/injuries/:slug" element={<InjuryDetail />} />
+            <Route path="/injuries" element={<Navigate to="/exercise-library" replace />} />
+            <Route path="/injuries/:slug" element={<Navigate to="/exercise-library" replace />} />
             <Route path="/pt-exercises" element={<PTExercises />} />
             <Route path="/exercise-library" element={<ExerciseLibraryHome />} />
             <Route path="/exercise-library/search" element={<ExerciseSearch />} />
