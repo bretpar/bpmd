@@ -25,7 +25,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import { Pencil, Trash2, Plus, X, LogOut, Search } from "lucide-react";
+import { Pencil, Trash2, Plus, X, LogOut, Search, ArrowUp, ArrowDown } from "lucide-react";
 
 const sb = supabase as any;
 
