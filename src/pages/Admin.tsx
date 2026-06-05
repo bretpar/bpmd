@@ -27,6 +27,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { Pencil, Trash2, Plus, X, LogOut, Search, ArrowUp, ArrowDown } from "lucide-react";
 import ImportAdmin from "./ImportAdmin";
+import { UltrasoundAdminInner } from "./UltrasoundAdmin";
 
 const sb = supabase as any;
 
@@ -881,12 +882,14 @@ const Admin = () => {
                 <TabsTrigger value="injuries">Injuries</TabsTrigger>
                 <TabsTrigger value="exercises">Exercises</TabsTrigger>
                 <TabsTrigger value="locations">PT Locations</TabsTrigger>
+                <TabsTrigger value="ultrasound">Ultrasound</TabsTrigger>
                 <TabsTrigger value="import">Import</TabsTrigger>
               </TabsList>
               <TabsContent value="joints"><JointsAdmin /></TabsContent>
               <TabsContent value="injuries"><InjuriesAdmin /></TabsContent>
               <TabsContent value="exercises"><ExercisesAdmin /></TabsContent>
               <TabsContent value="locations"><LocationsAdmin /></TabsContent>
+              <TabsContent value="ultrasound"><UltrasoundAdminInner /></TabsContent>
               <TabsContent value="import"><ImportAdmin /></TabsContent>
             </Tabs>
           </div>

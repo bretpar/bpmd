@@ -326,7 +326,7 @@ function InjectionEditor({
   );
 }
 
-const UltrasoundAdminInner = () => {
+export const UltrasoundAdminInner = () => {
   const [items, setItems] = useState<Injection[]>([]);
   const [editing, setEditing] = useState<Injection | null>(null);
   const [q, setQ] = useState("");
