@@ -84,6 +84,7 @@ const emptyInjection = (): Injection => ({
   featured: false,
   accepts_appointments: true,
   sort_order: 0,
+  updated_at: new Date().toISOString(),
 });
 
 const statusBadge = (s: Status) => {
