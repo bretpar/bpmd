@@ -7,7 +7,8 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Services from "./pages/Services";
-import Ultrasound from "./pages/Ultrasound";
+import Ultrasound, { UltrasoundDetail } from "./pages/Ultrasound";
+import UltrasoundAdmin from "./pages/UltrasoundAdmin";
 import PTExercises from "./pages/PTExercises";
 import PTLocations from "./pages/PTLocations";
 import {
@@ -41,6 +42,8 @@ const App = () => (
             <Route path="/resources" element={<Navigate to="/services" replace />} />
             <Route path="/orthopedic-resources" element={<Navigate to="/services" replace />} />
             <Route path="/ultrasound" element={<Ultrasound />} />
+            <Route path="/ultrasound/:slug" element={<UltrasoundDetail />} />
+            <Route path="/ultrasound-admin" element={<UltrasoundAdmin />} />
             <Route path="/injuries" element={<Navigate to="/exercise-library" replace />} />
             <Route path="/injuries/:slug" element={<Navigate to="/exercise-library" replace />} />
             <Route path="/pt-exercises" element={<PTExercises />} />
