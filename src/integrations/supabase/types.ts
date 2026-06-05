@@ -460,6 +460,87 @@ export type Database = {
         }
         Relationships: []
       }
+      ultrasound_injections: {
+        Row: {
+          accepts_appointments: boolean
+          body_region: string
+          conditions_treated: string | null
+          created_at: string
+          diagram_image_url: string | null
+          featured: boolean
+          full_explanation: string | null
+          id: string
+          medications: string | null
+          name: string
+          post_care: string | null
+          procedure_image_url: string | null
+          procedure_steps: string | null
+          risks: string | null
+          seo_description: string | null
+          seo_title: string | null
+          short_summary: string | null
+          slug: string
+          sort_order: number
+          status: string
+          ultrasound_image_url: string | null
+          updated_at: string
+          when_to_call: string | null
+          why_ultrasound: string | null
+        }
+        Insert: {
+          accepts_appointments?: boolean
+          body_region: string
+          conditions_treated?: string | null
+          created_at?: string
+          diagram_image_url?: string | null
+          featured?: boolean
+          full_explanation?: string | null
+          id?: string
+          medications?: string | null
+          name: string
+          post_care?: string | null
+          procedure_image_url?: string | null
+          procedure_steps?: string | null
+          risks?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          short_summary?: string | null
+          slug: string
+          sort_order?: number
+          status?: string
+          ultrasound_image_url?: string | null
+          updated_at?: string
+          when_to_call?: string | null
+          why_ultrasound?: string | null
+        }
+        Update: {
+          accepts_appointments?: boolean
+          body_region?: string
+          conditions_treated?: string | null
+          created_at?: string
+          diagram_image_url?: string | null
+          featured?: boolean
+          full_explanation?: string | null
+          id?: string
+          medications?: string | null
+          name?: string
+          post_care?: string | null
+          procedure_image_url?: string | null
+          procedure_steps?: string | null
+          risks?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          short_summary?: string | null
+          slug?: string
+          sort_order?: number
+          status?: string
+          ultrasound_image_url?: string | null
+          updated_at?: string
+          when_to_call?: string | null
+          why_ultrasound?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
