@@ -231,6 +231,19 @@ const JointsAdmin = () => {
 
   const filtered = items.filter((i) => i.name.toLowerCase().includes(q.toLowerCase()));
 
+  const move = async (id: string, direction: -1 | 1) => {
+    const idx = items.findIndex((i) => i.id === id);
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= items.length) return;
+    const a = items[idx];
+    const b = items[targetIdx];
+    await Promise.all([
+      sb.from("body_locations").update({ sort_order: b.sort_order }).eq("id", a.id),
+      sb.from("body_locations").update({ sort_order: a.sort_order }).eq("id", b.id),
+    ]);
+    load();
+  };
+
   return (
     <div className="mt-6 space-y-4">
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
@@ -244,7 +257,7 @@ const JointsAdmin = () => {
       </div>
 
       <div className="space-y-2">
-        {filtered.map((j) => (
+        {filtered.map((j, i) => (
           <Row
             key={j.id}
             title={j.name}
@@ -253,6 +266,16 @@ const JointsAdmin = () => {
               <Badge variant={j.is_active ? "default" : "outline"}>
                 {j.is_active ? "Active" : "Inactive"}
               </Badge>
+            }
+            actions={
+              <div className="flex gap-0.5 shrink-0">
+                <Button size="sm" variant="ghost" disabled={i === 0} onClick={() => move(j.id, -1)} title="Move up">
+                  <ArrowUp className="w-4 h-4" />
+                </Button>
+                <Button size="sm" variant="ghost" disabled={i === filtered.length - 1} onClick={() => move(j.id, 1)} title="Move down">
+                  <ArrowDown className="w-4 h-4" />
+                </Button>
+              </div>
             }
             onEdit={() => setEditing({ ...j })}
             onDelete={() => del(j.id)}
