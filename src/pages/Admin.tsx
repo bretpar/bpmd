@@ -27,6 +27,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { Pencil, Trash2, Plus, X, LogOut, Search, ArrowUp, ArrowDown } from "lucide-react";
 import ImportAdmin from "./ImportAdmin";
+import { UltrasoundAdminInner } from "./UltrasoundAdmin";
 
 const sb = supabase as any;
 
