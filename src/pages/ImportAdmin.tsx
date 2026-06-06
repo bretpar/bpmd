@@ -93,6 +93,7 @@ type ExerciseRow = {
   injury_slugs: string[];
   injury_ids: string[];
   joint_ids: string[];
+  joint_slugs: string[];
   difficulty: string | null;
   rehab_phase: string | null;
   sets_reps_time: string;
@@ -106,6 +107,7 @@ type ExerciseRow = {
   existingId?: string;
   errors: string[];
 };
+
 
 const splitList = (s: string) =>
   s
