@@ -793,12 +793,21 @@ export default function ImportAdmin() {
             </Card>
           )}
 
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={reset} disabled={importing}>
+              Cancel
+            </Button>
+            <Button onClick={runImport} disabled={!canImport} className="gap-2">
+              <Upload className="h-4 w-4" />
+              {importing ? "Importing…" : `Import ${importableCount} row${importableCount === 1 ? "" : "s"}`}
+            </Button>
           </div>
         </>
       )}
 
       <InjectionImporter />
     </div>
+
   );
 }
 
