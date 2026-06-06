@@ -256,15 +256,6 @@ function InjectionEditor({
             </label>
           </div>
 
-          <Field label="Conditions treated">
-            <Textarea
-              rows={2}
-              value={form.conditions_treated || ""}
-              onChange={(e) => set("conditions_treated", e.target.value)}
-              placeholder="e.g. Rotator cuff tendinopathy, subacromial bursitis"
-            />
-          </Field>
-
           <Field label="Short summary (for public card)">
             <Textarea
               rows={2}
@@ -273,39 +264,24 @@ function InjectionEditor({
             />
           </Field>
 
-          <Field label="Full patient-friendly explanation">
+          <Field label="What is this injection?">
             <Textarea rows={4} value={form.full_explanation || ""} onChange={(e) => set("full_explanation", e.target.value)} />
           </Field>
 
-          <Field label="Why ultrasound is used">
-            <Textarea rows={3} value={form.why_ultrasound || ""} onChange={(e) => set("why_ultrasound", e.target.value)} />
+          <Field label="Indications / conditions treated">
+            <Textarea
+              rows={2}
+              value={form.conditions_treated || ""}
+              onChange={(e) => set("conditions_treated", e.target.value)}
+              placeholder="e.g. Rotator cuff tendinopathy, subacromial bursitis"
+            />
           </Field>
 
-          <Field label="Step-by-step procedure explanation">
+          <Field label="Step-by-step procedure">
             <Textarea rows={4} value={form.procedure_steps || ""} onChange={(e) => set("procedure_steps", e.target.value)} />
           </Field>
 
-          <Field label="Common medications used">
-            <Textarea rows={2} value={form.medications || ""} onChange={(e) => set("medications", e.target.value)} />
-          </Field>
-
-          <Field label="Risks and side effects">
-            <Textarea rows={3} value={form.risks || ""} onChange={(e) => set("risks", e.target.value)} />
-          </Field>
-
-          <Field label="Post-injection care (leave blank to use default)">
-            <Textarea rows={3} value={form.post_care || ""} onChange={(e) => set("post_care", e.target.value)} />
-          </Field>
-
-          <Field label="When to call the clinic">
-            <Textarea rows={2} value={form.when_to_call || ""} onChange={(e) => set("when_to_call", e.target.value)} />
-          </Field>
-
-          <div className="grid sm:grid-cols-3 gap-4">
-            <ImageUploadField label="Procedure image" value={form.procedure_image_url} onChange={(v) => set("procedure_image_url", v)} />
-            <ImageUploadField label="Ultrasound image" value={form.ultrasound_image_url} onChange={(v) => set("ultrasound_image_url", v)} />
-            <ImageUploadField label="Diagram image" value={form.diagram_image_url} onChange={(v) => set("diagram_image_url", v)} />
-          </div>
+          <ImageUploadField label="Optional image" value={form.procedure_image_url} onChange={(v) => set("procedure_image_url", v)} />
 
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="SEO title">
@@ -315,6 +291,12 @@ function InjectionEditor({
               <Input value={form.seo_description || ""} onChange={(e) => set("seo_description", e.target.value)} />
             </Field>
           </div>
+
+          <p className="text-xs text-muted-foreground border-t pt-3">
+            Shared content (overview, pre-care, post-care, risks, when to call) is edited in the
+            <strong> Shared Content</strong> section and reused on every injection page.
+          </p>
+
         </div>
 
         <DialogFooter>
