@@ -241,7 +241,7 @@ export const UltrasoundDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const [inj, setInj] = useState<Injection | null>(null);
   const [loading, setLoading] = useState(true);
-  const blocks = useSharedContent();
+
 
   useEffect(() => {
     if (!slug) return;
