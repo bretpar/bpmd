@@ -709,6 +709,20 @@ export default function ImportAdmin() {
             </Alert>
           )}
 
+          {newJoints.length > 0 && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>
+                {newJoints.length} new joint{newJoints.length === 1 ? "" : "s"} will be created
+              </AlertTitle>
+              <AlertDescription>
+                These joints don't exist yet and will be created automatically on import:{" "}
+                {newJoints.map((j) => j.name).join(", ")}.
+              </AlertDescription>
+            </Alert>
+          )}
+
+
           {injuries.length > 0 && (
             <Card className="p-4">
               <h3 className="font-semibold mb-3">Injuries preview ({injuries.length})</h3>
