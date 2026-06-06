@@ -184,8 +184,19 @@ export default function ImportAdmin() {
 
       const injRows: InjuryRow[] = [];
       const exRows: ExerciseRow[] = [];
-      const stagedBySlug = new Map<string, { slug: string; name: string; joint_ids: string[] }>();
-      const stagedByName = new Map<string, { slug: string; name: string; joint_ids: string[] }>();
+      const stagedBySlug = new Map<string, { slug: string; name: string; joint_slugs: string[] }>();
+      const stagedByName = new Map<string, { slug: string; name: string; joint_slugs: string[] }>();
+      const newJointMap = new Map<string, { slug: string; name: string }>();
+
+      const resolveJoint = (token: string): { slug: string; id?: string } => {
+        const tl = token.toLowerCase();
+        const tSlug = slugify(token);
+        const existing = jointBySlug.get(tl) || jointBySlug.get(tSlug) || jointByName.get(tl);
+        if (existing) return { slug: existing.slug, id: existing.id };
+        // Stage a new joint to auto-create on import
+        if (!newJointMap.has(tSlug)) newJointMap.set(tSlug, { slug: tSlug, name: token });
+        return { slug: tSlug };
+      };
 
       if (injSheet) {
         const raw: any[] = XLSX.utils.sheet_to_json(injSheet, { defval: "" });
@@ -211,13 +222,9 @@ export default function ImportAdmin() {
           const joint_ids: string[] = [];
           const joint_slugs: string[] = [];
           jointTokens.forEach((t) => {
-            const j = jointBySlug.get(t.toLowerCase()) || jointByName.get(t.toLowerCase());
-            if (j) {
-              joint_ids.push(j.id);
-              joint_slugs.push(j.slug);
-            } else {
-              errors.push(`Joint not found: "${t}"`);
-            }
+            const res = resolveJoint(t);
+            joint_slugs.push(res.slug);
+            if (res.id) joint_ids.push(res.id);
           });
 
           const existing = pathBySlug.get(slug.toLowerCase());
@@ -237,7 +244,7 @@ export default function ImportAdmin() {
             existingId: existing?.id,
             errors,
           });
-          const stagedEntry = { slug, name, joint_ids };
+          const stagedEntry = { slug, name, joint_slugs };
           stagedBySlug.set(slug.toLowerCase(), stagedEntry);
           if (name) stagedByName.set(name.toLowerCase(), stagedEntry);
         });
@@ -291,10 +298,10 @@ export default function ImportAdmin() {
           const injury_ids: string[] = [];
           const injury_slugs: string[] = [];
           const jointIdSet = new Set<string>();
+          const jointSlugSet = new Set<string>();
           injuryTokens.forEach((t) => {
             const tl = t.toLowerCase();
             const tSlug = slugify(t);
-            // 1) existing slug, 2) existing name, 3) staged slug, 4) staged name
             const existingBySlug = pathBySlug.get(tl) || pathBySlug.get(tSlug);
             const existingByName = pathByName.get(tl);
             const staged =
@@ -309,7 +316,7 @@ export default function ImportAdmin() {
               injury_slugs.push(existingByName.slug);
             } else if (staged) {
               injury_slugs.push(staged.slug);
-              staged.joint_ids.forEach((id) => jointIdSet.add(id));
+              staged.joint_slugs.forEach((s) => jointSlugSet.add(s));
             } else {
               errors.push(`Injury not found: "${t}"`);
             }
@@ -331,6 +338,7 @@ export default function ImportAdmin() {
             injury_slugs,
             injury_ids,
             joint_ids: Array.from(jointIdSet),
+            joint_slugs: Array.from(jointSlugSet),
             difficulty,
             rehab_phase,
             sets_reps_time,
@@ -346,6 +354,9 @@ export default function ImportAdmin() {
           });
         });
       }
+
+      setNewJoints(Array.from(newJointMap.values()));
+
 
       setInjuries(injRows);
       setExercises(exRows);
