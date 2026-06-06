@@ -256,15 +256,6 @@ function InjectionEditor({
             </label>
           </div>
 
-          <Field label="Conditions treated">
-            <Textarea
-              rows={2}
-              value={form.conditions_treated || ""}
-              onChange={(e) => set("conditions_treated", e.target.value)}
-              placeholder="e.g. Rotator cuff tendinopathy, subacromial bursitis"
-            />
-          </Field>
-
           <Field label="Short summary (for public card)">
             <Textarea
               rows={2}
@@ -273,39 +264,24 @@ function InjectionEditor({
             />
           </Field>
 
-          <Field label="Full patient-friendly explanation">
+          <Field label="What is this injection?">
             <Textarea rows={4} value={form.full_explanation || ""} onChange={(e) => set("full_explanation", e.target.value)} />
           </Field>
 
-          <Field label="Why ultrasound is used">
-            <Textarea rows={3} value={form.why_ultrasound || ""} onChange={(e) => set("why_ultrasound", e.target.value)} />
+          <Field label="Indications / conditions treated">
+            <Textarea
+              rows={2}
+              value={form.conditions_treated || ""}
+              onChange={(e) => set("conditions_treated", e.target.value)}
+              placeholder="e.g. Rotator cuff tendinopathy, subacromial bursitis"
+            />
           </Field>
 
-          <Field label="Step-by-step procedure explanation">
+          <Field label="Step-by-step procedure">
             <Textarea rows={4} value={form.procedure_steps || ""} onChange={(e) => set("procedure_steps", e.target.value)} />
           </Field>
 
-          <Field label="Common medications used">
-            <Textarea rows={2} value={form.medications || ""} onChange={(e) => set("medications", e.target.value)} />
-          </Field>
-
-          <Field label="Risks and side effects">
-            <Textarea rows={3} value={form.risks || ""} onChange={(e) => set("risks", e.target.value)} />
-          </Field>
-
-          <Field label="Post-injection care (leave blank to use default)">
-            <Textarea rows={3} value={form.post_care || ""} onChange={(e) => set("post_care", e.target.value)} />
-          </Field>
-
-          <Field label="When to call the clinic">
-            <Textarea rows={2} value={form.when_to_call || ""} onChange={(e) => set("when_to_call", e.target.value)} />
-          </Field>
-
-          <div className="grid sm:grid-cols-3 gap-4">
-            <ImageUploadField label="Procedure image" value={form.procedure_image_url} onChange={(v) => set("procedure_image_url", v)} />
-            <ImageUploadField label="Ultrasound image" value={form.ultrasound_image_url} onChange={(v) => set("ultrasound_image_url", v)} />
-            <ImageUploadField label="Diagram image" value={form.diagram_image_url} onChange={(v) => set("diagram_image_url", v)} />
-          </div>
+          <ImageUploadField label="Optional image" value={form.procedure_image_url} onChange={(v) => set("procedure_image_url", v)} />
 
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="SEO title">
@@ -315,6 +291,12 @@ function InjectionEditor({
               <Input value={form.seo_description || ""} onChange={(e) => set("seo_description", e.target.value)} />
             </Field>
           </div>
+
+          <p className="text-xs text-muted-foreground border-t pt-3">
+            Shared content (overview, pre-care, post-care, risks, when to call) is edited in the
+            <strong> Shared Content</strong> section and reused on every injection page.
+          </p>
+
         </div>
 
         <DialogFooter>
@@ -325,6 +307,71 @@ function InjectionEditor({
     </Dialog>
   );
 }
+
+const SHARED_KEYS = [
+  { key: "overview", label: "General explanation of ultrasound-guided injections" },
+  { key: "pre_care", label: "Pre-injection instructions" },
+  { key: "post_care", label: "Post-injection care instructions" },
+  { key: "risks", label: "General risks and side effects" },
+  { key: "when_to_call", label: "When to call the clinic" },
+];
+
+function SharedContentEditor() {
+  const [rows, setRows] = useState<Record<string, { title: string; body: string }>>({});
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    sb.from("ultrasound_content").select("*").then(({ data }: any) => {
+      const map: Record<string, { title: string; body: string }> = {};
+      (data || []).forEach((r: any) => { map[r.key] = { title: r.title || "", body: r.body || "" }; });
+      SHARED_KEYS.forEach((k) => { if (!map[k.key]) map[k.key] = { title: k.label, body: "" }; });
+      setRows(map);
+      setLoaded(true);
+    });
+  }, []);
+
+  const save = async (key: string) => {
+    setSavingKey(key);
+    const { title, body } = rows[key];
+    const { error } = await sb.from("ultrasound_content").upsert({ key, title, body });
+    setSavingKey(null);
+    if (error) return toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    toast({ title: "Saved" });
+  };
+
+  if (!loaded) return <p className="text-muted-foreground text-sm">Loading shared content…</p>;
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-xl font-semibold">Shared Content Blocks</h2>
+        <p className="text-sm text-muted-foreground">These blocks appear at the top of the public Ultrasound page and are referenced from each injection page.</p>
+      </div>
+      {SHARED_KEYS.map(({ key, label }) => (
+        <div key={key} className="border rounded-lg p-4 bg-card space-y-2">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+          <Input
+            value={rows[key]?.title || ""}
+            onChange={(e) => setRows((r) => ({ ...r, [key]: { ...r[key], title: e.target.value } }))}
+            placeholder="Section heading"
+          />
+          <Textarea
+            rows={5}
+            value={rows[key]?.body || ""}
+            onChange={(e) => setRows((r) => ({ ...r, [key]: { ...r[key], body: e.target.value } }))}
+          />
+          <div className="flex justify-end">
+            <Button size="sm" onClick={() => save(key)} disabled={savingKey === key}>
+              {savingKey === key ? "Saving..." : "Save"}
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 
 export const UltrasoundAdminInner = () => {
   const [items, setItems] = useState<Injection[]>([]);
@@ -447,6 +494,11 @@ export const UltrasoundAdminInner = () => {
           </table>
         </div>
       </div>
+
+      <div className="mt-10">
+        <SharedContentEditor />
+      </div>
+
 
       {editing && (
         <InjectionEditor
