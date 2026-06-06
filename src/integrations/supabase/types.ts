@@ -460,6 +460,27 @@ export type Database = {
         }
         Relationships: []
       }
+      ultrasound_content: {
+        Row: {
+          body: string | null
+          key: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          key: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          key?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ultrasound_injections: {
         Row: {
           accepts_appointments: boolean
