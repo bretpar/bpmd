@@ -389,6 +389,38 @@ export default function ImportAdmin() {
     try {
       let injCreated = 0, injUpdated = 0, injSkipped = 0;
       let exCreated = 0, exUpdated = 0, exSkipped = 0;
+      let jointsCreated = 0;
+
+      // 1) Ensure any staged new joints exist; build slug->id map for all joints
+      const { data: allJointsData } = await sb.from("body_locations").select("id, slug");
+      const jointIdBySlug = new Map<string, string>(
+        (allJointsData || []).map((j: any) => [String(j.slug).toLowerCase(), j.id])
+      );
+      for (const nj of newJoints) {
+        if (jointIdBySlug.has(nj.slug.toLowerCase())) continue;
+        const { data, error } = await sb
+          .from("body_locations")
+          .insert({ name: nj.name, slug: nj.slug, is_active: true })
+          .select("id")
+          .single();
+        if (error) throw new Error(`Create joint "${nj.name}": ${error.message}`);
+        jointIdBySlug.set(nj.slug.toLowerCase(), data.id);
+        jointsCreated++;
+      }
+
+      const resolveIds = (slugs: string[]) =>
+        slugs.map((s) => jointIdBySlug.get(s.toLowerCase())).filter((x): x is string => !!x);
+
+      // Resolve injury joint_ids from slugs (covers auto-created joints)
+      injuries.forEach((r) => {
+        r.joint_ids = resolveIds(r.joint_slugs);
+      });
+      exercises.forEach((r) => {
+        const fromSlugs = resolveIds(r.joint_slugs);
+        const merged = new Set<string>([...r.joint_ids, ...fromSlugs]);
+        r.joint_ids = Array.from(merged);
+      });
+
 
       for (const r of injuries) {
         if (r.action === "skip") { injSkipped++; continue; }
