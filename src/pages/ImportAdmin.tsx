@@ -804,6 +804,417 @@ export default function ImportAdmin() {
           </div>
         </>
       )}
+
+      <InjectionImporter />
     </div>
+
   );
 }
+
+/* ===================== Injection Importer ===================== */
+
+const INJ_REGIONS = ["Shoulder", "Elbow", "Wrist/Hand", "Hip", "Knee", "Foot/Ankle", "Other"] as const;
+const INJ_STATUSES = ["draft", "published", "hidden"] as const;
+
+type InjAction = "create" | "update" | "duplicate" | "skip";
+
+type InjectionImportRow = {
+  rowIndex: number;
+  name: string;
+  slug: string;
+  body_region: string;
+  status: string;
+  sort_order: number;
+  featured: boolean;
+  accepts_appointments: boolean;
+  short_summary: string;
+  full_explanation: string;
+  conditions_treated: string;
+  procedure_steps: string;
+  procedure_image_url: string;
+  seo_title: string;
+  seo_description: string;
+  existingId?: string;
+  action: InjAction;
+  errors: string[];
+};
+
+const INJ_SAMPLE_CSV =
+  "injection_name,slug,body_region,status,sort_order,featured,accept_appointments,short_summary,what_is_this_injection,indications,step_by_step_procedure,image_url,seo_title,seo_meta_description\n" +
+  '"Knee Joint Injection","knee-joint-injection","Knee","draft",10,false,true,"Ultrasound-guided knee joint injections place medication directly into the knee joint to help reduce pain and inflammation from arthritis or swelling.","A knee joint injection is a procedure where medication is placed directly into the knee joint to help reduce pain and inflammation.","Knee osteoarthritis; knee joint inflammation; mild knee swelling; arthritis flare-ups; degenerative joint disease","The patient is positioned with the knee relaxed. The skin is cleaned. Ultrasound is used to identify the joint space. A small needle is guided into the knee joint. Medication is injected. A bandage is placed.","","Ultrasound-Guided Knee Joint Injection","Learn about ultrasound-guided knee joint injections for knee arthritis swelling and joint inflammation including indications what to expect and procedure steps."\n';
+
+const REGION_ALIAS: Record<string, string> = {
+  "knee": "Knee",
+  "shoulder": "Shoulder",
+  "hip": "Hip",
+  "elbow": "Elbow",
+  "wrist": "Wrist/Hand",
+  "hand": "Wrist/Hand",
+  "wrist/hand": "Wrist/Hand",
+  "hand/wrist": "Wrist/Hand",
+  "foot": "Foot/Ankle",
+  "ankle": "Foot/Ankle",
+  "foot/ankle": "Foot/Ankle",
+  "ankle/foot": "Foot/Ankle",
+  "other": "Other",
+};
+
+const normalizeRegion = (s: string): string => {
+  const t = s.trim();
+  if (!t) return "";
+  const match = REGION_ALIAS[t.toLowerCase()];
+  if (match) return match;
+  const exact = INJ_REGIONS.find((r) => r.toLowerCase() === t.toLowerCase());
+  return exact || t;
+};
+
+const downloadFile = (filename: string, content: string, mime: string) => {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+function InjectionImporter() {
+  const [fileName, setFileName] = useState("");
+  const [parsing, setParsing] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [rows, setRows] = useState<InjectionImportRow[]>([]);
+  const [done, setDone] = useState<string | null>(null);
+
+  const reset = () => { setRows([]); setDone(null); setFileName(""); };
+
+  const buildRow = (raw: any, idx: number, existingBySlug: Map<string, string>): InjectionImportRow => {
+    const name = norm(pick(raw, "injection_name", "name", "Injection name", "Name"));
+    let slug = norm(pick(raw, "slug", "Slug"));
+    if (!slug && name) slug = slugify(name);
+    const regionRaw = norm(pick(raw, "body_region", "Body region", "region"));
+    const body_region = normalizeRegion(regionRaw) || "Other";
+    let status = lower(pick(raw, "status", "Status")) || "draft";
+    if (!["draft", "published", "hidden"].includes(status)) status = "draft";
+    const sortRaw = pick(raw, "sort_order", "Sort order");
+    const sort_order = sortRaw === "" || sortRaw === null ? 0 : parseInt(String(sortRaw)) || 0;
+    const featured = parseBoolOrNull(pick(raw, "featured", "Featured")) ?? false;
+    const accepts_appointments =
+      parseBoolOrNull(pick(raw, "accept_appointments", "accepts_appointments", "Accept appointments")) ?? true;
+    const short_summary = norm(pick(raw, "short_summary", "Short summary", "short public card summary"));
+    const full_explanation = norm(
+      pick(raw, "what_is_this_injection", "full_explanation", "What is this injection?", "What is this injection")
+    );
+    const conditions_treated = norm(
+      pick(raw, "indications", "conditions_treated", "Indications", "Conditions treated")
+    );
+    const procedure_steps = norm(
+      pick(raw, "step_by_step_procedure", "procedure_steps", "Step-by-step procedure")
+    );
+    const procedure_image_url = norm(pick(raw, "image_url", "procedure_image_url", "Image URL"));
+    let seo_title = norm(pick(raw, "seo_title", "SEO title", "seo title"));
+    if (!seo_title && name) seo_title = name;
+    const seo_description = norm(
+      pick(raw, "seo_meta_description", "seo_description", "SEO meta description", "SEO description")
+    );
+
+    const errors: string[] = [];
+    if (!name) errors.push("Missing injection name");
+    if (!slug) errors.push("Missing slug");
+
+    const existingId = existingBySlug.get(slug);
+    const action: InjAction = errors.length ? "skip" : existingId ? "update" : "create";
+
+    return {
+      rowIndex: idx + 2,
+      name, slug, body_region, status, sort_order, featured, accepts_appointments,
+      short_summary, full_explanation, conditions_treated, procedure_steps,
+      procedure_image_url, seo_title, seo_description,
+      existingId, action, errors,
+    };
+  };
+
+  const onFile = async (file: File) => {
+    reset();
+    setParsing(true);
+    setFileName(file.name);
+    try {
+      const text = await file.text();
+      const lowerName = file.name.toLowerCase();
+      let records: any[] = [];
+
+      if (lowerName.endsWith(".json")) {
+        const parsed = JSON.parse(text);
+        records = Array.isArray(parsed) ? parsed : [parsed];
+      } else if (lowerName.endsWith(".md") || lowerName.endsWith(".txt")) {
+        // Simple key: value blocks separated by --- or blank lines
+        const blocks = text.split(/^\s*---+\s*$/m).map((b) => b.trim()).filter(Boolean);
+        records = blocks.map((block) => {
+          const obj: any = {};
+          let currentKey: string | null = null;
+          for (const line of block.split(/\r?\n/)) {
+            const m = line.match(/^([A-Za-z_][A-Za-z0-9 _\-/?]*)\s*:\s*(.*)$/);
+            if (m) {
+              currentKey = m[1].trim().toLowerCase().replace(/\s+/g, "_").replace(/[?]/g, "");
+              obj[currentKey] = m[2];
+            } else if (currentKey && line.trim()) {
+              obj[currentKey] = (obj[currentKey] ? obj[currentKey] + "\n" : "") + line;
+            }
+          }
+          return obj;
+        });
+      } else {
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: "array" });
+        const sheetName =
+          wb.SheetNames.find((s) => /injection/i.test(s)) || wb.SheetNames[0];
+        records = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { defval: "" });
+      }
+
+      const { data: existing } = await sb.from("ultrasound_injections").select("id, slug");
+      const existingBySlug = new Map<string, string>(
+        ((existing || []) as any[]).map((r) => [r.slug, r.id])
+      );
+
+      const parsed = records.map((r, i) => buildRow(r, i, existingBySlug));
+      setRows(parsed);
+      if (parsed.length === 0) {
+        toast({ title: "No injection rows found in file", variant: "destructive" });
+      }
+    } catch (e: any) {
+      toast({ title: "Parse failed", description: e.message, variant: "destructive" });
+    } finally {
+      setParsing(false);
+    }
+  };
+
+  const updateRow = (i: number, patch: Partial<InjectionImportRow>) =>
+    setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+
+  const setAction = (i: number, action: InjAction) => updateRow(i, { action });
+
+  const runImport = async () => {
+    setImporting(true);
+    let created = 0, updated = 0, skipped = 0;
+    try {
+      for (const r of rows) {
+        if (r.errors.length || r.action === "skip") { skipped++; continue; }
+        let slug = r.slug;
+        let action = r.action;
+        if (action === "duplicate") {
+          // ensure unique slug
+          const { data: existing } = await sb.from("ultrasound_injections").select("slug");
+          const taken = new Set(((existing || []) as any[]).map((x) => x.slug));
+          let n = 2;
+          while (taken.has(`${r.slug}-${n}`)) n++;
+          slug = `${r.slug}-${n}`;
+          action = "create";
+        }
+        const payload = {
+          name: r.name,
+          slug,
+          body_region: r.body_region,
+          status: r.status,
+          sort_order: r.sort_order,
+          featured: r.featured,
+          accepts_appointments: r.accepts_appointments,
+          short_summary: r.short_summary || null,
+          full_explanation: r.full_explanation || null,
+          conditions_treated: r.conditions_treated || null,
+          procedure_steps: r.procedure_steps || null,
+          procedure_image_url: r.procedure_image_url || null,
+          seo_title: r.seo_title || null,
+          seo_description: r.seo_description || null,
+        };
+        if (action === "update" && r.existingId) {
+          const { error } = await sb.from("ultrasound_injections").update(payload).eq("id", r.existingId);
+          if (error) { skipped++; continue; }
+          updated++;
+        } else {
+          const { error } = await sb.from("ultrasound_injections").insert(payload);
+          if (error) { skipped++; continue; }
+          created++;
+        }
+      }
+      setDone(`Injections: ${created} created, ${updated} updated, ${skipped} skipped.`);
+      toast({ title: "Injection import complete" });
+    } catch (e: any) {
+      toast({ title: "Import failed", description: e.message, variant: "destructive" });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const injActionBadge = (a: InjAction) => {
+    const map: Record<InjAction, { variant: any; label: string }> = {
+      create: { variant: "default", label: "create" },
+      update: { variant: "secondary", label: "update existing" },
+      duplicate: { variant: "outline", label: "duplicate" },
+      skip: { variant: "destructive", label: "skip" },
+    };
+    return <Badge variant={map[a].variant}>{map[a].label}</Badge>;
+  };
+
+  const errorCount = rows.filter((r) => r.errors.length).length;
+  const conflictCount = rows.filter((r) => r.existingId && !r.errors.length).length;
+  const importable = rows.filter((r) => !r.errors.length && r.action !== "skip").length;
+
+  return (
+    <Card className="p-5 mt-8">
+      <div className="flex items-start gap-3">
+        <FileSpreadsheet className="h-6 w-6 text-primary shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <h2 className="font-semibold text-lg">Import Injection Content</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Upload a CSV, Excel, JSON, or Markdown file containing one or more ultrasound-guided
+            injections. Matched by slug — choose per-row to update existing, create as duplicate, or skip.
+            Shared content (overview, pre/post-care, risks, when to call) is managed separately and is not part of this import.
+          </p>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <Input
+              type="file"
+              accept=".csv,.xlsx,.xls,.json,.md,.txt"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }}
+              disabled={parsing || importing}
+              className="max-w-xs"
+            />
+            {fileName && <span className="text-sm text-muted-foreground truncate">{fileName}</span>}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => downloadFile("injection_import_template.csv", INJ_SAMPLE_CSV, "text/csv")}
+            >
+              Download sample template
+            </Button>
+            {rows.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={reset} disabled={importing}>Clear</Button>
+            )}
+          </div>
+
+          <p className="text-xs text-muted-foreground mt-3">
+            Columns: injection_name, slug, body_region, status, sort_order, featured,
+            accept_appointments, short_summary, what_is_this_injection, indications,
+            step_by_step_procedure, image_url, seo_title, seo_meta_description.
+          </p>
+        </div>
+      </div>
+
+      {parsing && <div className="text-center py-6 text-muted-foreground">Parsing file…</div>}
+
+      {done && (
+        <Alert className="mt-4">
+          <CheckCircle2 className="h-4 w-4" />
+          <AlertTitle>Done</AlertTitle>
+          <AlertDescription>{done}</AlertDescription>
+        </Alert>
+      )}
+
+      {rows.length > 0 && (
+        <div className="mt-5 space-y-4">
+          {errorCount > 0 && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>{errorCount} row{errorCount === 1 ? "" : "s"} with errors</AlertTitle>
+              <AlertDescription>Rows with errors will be skipped. Fix in your file and re-upload.</AlertDescription>
+            </Alert>
+          )}
+          {conflictCount > 0 && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>{conflictCount} slug conflict{conflictCount === 1 ? "" : "s"}</AlertTitle>
+              <AlertDescription>
+                These slugs already exist. Choose an action per row: update existing, create as duplicate, or skip.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="overflow-x-auto border rounded-md">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs text-muted-foreground border-b bg-muted/40">
+                <tr>
+                  <th className="p-2">Row</th>
+                  <th className="p-2">Name</th>
+                  <th className="p-2">Slug</th>
+                  <th className="p-2">Region</th>
+                  <th className="p-2">Status</th>
+                  <th className="p-2">Action</th>
+                  <th className="p-2">Issues</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => (
+                  <tr key={i} className={`border-b align-top ${r.errors.length ? "bg-destructive/5" : ""}`}>
+                    <td className="p-2 text-muted-foreground">{r.rowIndex}</td>
+                    <td className="p-2">
+                      <Input
+                        value={r.name}
+                        onChange={(e) => updateRow(i, { name: e.target.value })}
+                        className="h-8"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <Input
+                        value={r.slug}
+                        onChange={(e) => updateRow(i, { slug: e.target.value })}
+                        className="h-8 font-mono text-xs"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <select
+                        value={r.body_region}
+                        onChange={(e) => updateRow(i, { body_region: e.target.value })}
+                        className="h-8 rounded border bg-background text-xs px-2"
+                      >
+                        {INJ_REGIONS.map((reg) => <option key={reg} value={reg}>{reg}</option>)}
+                      </select>
+                    </td>
+                    <td className="p-2">
+                      <select
+                        value={r.status}
+                        onChange={(e) => updateRow(i, { status: e.target.value })}
+                        className="h-8 rounded border bg-background text-xs px-2"
+                      >
+                        {INJ_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </td>
+                    <td className="p-2">
+                      <div className="flex flex-col gap-1">
+                        {injActionBadge(r.action)}
+                        {r.existingId && !r.errors.length && (
+                          <select
+                            value={r.action}
+                            onChange={(e) => setAction(i, e.target.value as InjAction)}
+                            className="h-7 rounded border bg-background text-xs px-1"
+                          >
+                            <option value="update">Update existing</option>
+                            <option value="duplicate">Create as duplicate</option>
+                            <option value="skip">Skip</option>
+                          </select>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-2 text-destructive text-xs">
+                      {r.errors.join("; ")}
+                      {r.existingId && !r.errors.length && (
+                        <div className="text-amber-600">Slug already exists</div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={reset} disabled={importing}>Cancel</Button>
+            <Button onClick={runImport} disabled={importing || importable === 0} className="gap-2">
+              <Upload className="h-4 w-4" />
+              {importing ? "Importing…" : `Import ${importable} injection${importable === 1 ? "" : "s"}`}
+            </Button>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
