@@ -308,6 +308,71 @@ function InjectionEditor({
   );
 }
 
+const SHARED_KEYS = [
+  { key: "overview", label: "General explanation of ultrasound-guided injections" },
+  { key: "pre_care", label: "Pre-injection instructions" },
+  { key: "post_care", label: "Post-injection care instructions" },
+  { key: "risks", label: "General risks and side effects" },
+  { key: "when_to_call", label: "When to call the clinic" },
+];
+
+function SharedContentEditor() {
+  const [rows, setRows] = useState<Record<string, { title: string; body: string }>>({});
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    sb.from("ultrasound_content").select("*").then(({ data }: any) => {
+      const map: Record<string, { title: string; body: string }> = {};
+      (data || []).forEach((r: any) => { map[r.key] = { title: r.title || "", body: r.body || "" }; });
+      SHARED_KEYS.forEach((k) => { if (!map[k.key]) map[k.key] = { title: k.label, body: "" }; });
+      setRows(map);
+      setLoaded(true);
+    });
+  }, []);
+
+  const save = async (key: string) => {
+    setSavingKey(key);
+    const { title, body } = rows[key];
+    const { error } = await sb.from("ultrasound_content").upsert({ key, title, body });
+    setSavingKey(null);
+    if (error) return toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    toast({ title: "Saved" });
+  };
+
+  if (!loaded) return <p className="text-muted-foreground text-sm">Loading shared content…</p>;
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-xl font-semibold">Shared Content Blocks</h2>
+        <p className="text-sm text-muted-foreground">These blocks appear at the top of the public Ultrasound page and are referenced from each injection page.</p>
+      </div>
+      {SHARED_KEYS.map(({ key, label }) => (
+        <div key={key} className="border rounded-lg p-4 bg-card space-y-2">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+          <Input
+            value={rows[key]?.title || ""}
+            onChange={(e) => setRows((r) => ({ ...r, [key]: { ...r[key], title: e.target.value } }))}
+            placeholder="Section heading"
+          />
+          <Textarea
+            rows={5}
+            value={rows[key]?.body || ""}
+            onChange={(e) => setRows((r) => ({ ...r, [key]: { ...r[key], body: e.target.value } }))}
+          />
+          <div className="flex justify-end">
+            <Button size="sm" onClick={() => save(key)} disabled={savingKey === key}>
+              {savingKey === key ? "Saving..." : "Save"}
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
 export const UltrasoundAdminInner = () => {
   const [items, setItems] = useState<Injection[]>([]);
   const [editing, setEditing] = useState<Injection | null>(null);
