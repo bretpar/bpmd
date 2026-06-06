@@ -287,14 +287,23 @@ export default function ImportAdmin() {
           const jointIdSet = new Set<string>();
           injuryTokens.forEach((t) => {
             const tl = t.toLowerCase();
-            const p = pathBySlug.get(tl) || pathByName.get(tl);
-            if (p) {
-              injury_ids.push(p.id);
-              injury_slugs.push(p.slug);
-            } else if (stagedInjurySlugs.has(tl) || stagedInjurySlugs.has(slugify(t))) {
-              const key = stagedInjurySlugs.has(tl) ? tl : slugify(t);
-              injury_slugs.push(key);
-              stagedInjurySlugs.get(key)!.joint_ids.forEach((id) => jointIdSet.add(id));
+            const tSlug = slugify(t);
+            // 1) existing slug, 2) existing name, 3) staged slug, 4) staged name
+            const existingBySlug = pathBySlug.get(tl) || pathBySlug.get(tSlug);
+            const existingByName = pathByName.get(tl);
+            const staged =
+              stagedBySlug.get(tl) ||
+              stagedBySlug.get(tSlug) ||
+              stagedByName.get(tl);
+            if (existingBySlug) {
+              injury_ids.push(existingBySlug.id);
+              injury_slugs.push(existingBySlug.slug);
+            } else if (existingByName) {
+              injury_ids.push(existingByName.id);
+              injury_slugs.push(existingByName.slug);
+            } else if (staged) {
+              injury_slugs.push(staged.slug);
+              staged.joint_ids.forEach((id) => jointIdSet.add(id));
             } else {
               errors.push(`Injury not found: "${t}"`);
             }
