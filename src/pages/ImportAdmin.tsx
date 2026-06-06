@@ -580,9 +580,11 @@ export default function ImportAdmin() {
       }
 
       setDone(
+        `Joints: ${jointsCreated} created. ` +
         `Injuries: ${injCreated} created, ${injUpdated} updated, ${injSkipped} skipped. ` +
         `Exercises: ${exCreated} created, ${exUpdated} updated, ${exSkipped} skipped.`
       );
+
       toast({ title: "Import complete" });
     } catch (e: any) {
       toast({ title: "Import failed", description: e.message, variant: "destructive" });
