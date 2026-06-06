@@ -358,9 +358,8 @@ export const UltrasoundDetail = () => {
           )}
         </div>
       </article>
-      {/* keep unused refs to avoid TS warning on blocks */}
-      <span className="hidden">{Object.keys(blocks).length}</span>
     </Layout>
+
   );
 };
 
