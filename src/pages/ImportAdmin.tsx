@@ -121,9 +121,11 @@ export default function ImportAdmin() {
   const [importing, setImporting] = useState(false);
   const [injuries, setInjuries] = useState<InjuryRow[]>([]);
   const [exercises, setExercises] = useState<ExerciseRow[]>([]);
+  const [newJoints, setNewJoints] = useState<{ slug: string; name: string }[]>([]);
   const [done, setDone] = useState<string | null>(null);
   const [mergeExisting, setMergeExisting] = useState(true);
   const [replaceRelationships, setReplaceRelationships] = useState(false);
+
 
   const reset = () => {
     setInjuries([]);
