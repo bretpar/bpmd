@@ -93,6 +93,7 @@ type ExerciseRow = {
   injury_slugs: string[];
   injury_ids: string[];
   joint_ids: string[];
+  joint_slugs: string[];
   difficulty: string | null;
   rehab_phase: string | null;
   sets_reps_time: string;
@@ -107,6 +108,7 @@ type ExerciseRow = {
   errors: string[];
 };
 
+
 const splitList = (s: string) =>
   s
     .split(/[;\n]+/)
@@ -119,16 +121,20 @@ export default function ImportAdmin() {
   const [importing, setImporting] = useState(false);
   const [injuries, setInjuries] = useState<InjuryRow[]>([]);
   const [exercises, setExercises] = useState<ExerciseRow[]>([]);
+  const [newJoints, setNewJoints] = useState<{ slug: string; name: string }[]>([]);
   const [done, setDone] = useState<string | null>(null);
   const [mergeExisting, setMergeExisting] = useState(true);
   const [replaceRelationships, setReplaceRelationships] = useState(false);
 
+
   const reset = () => {
     setInjuries([]);
     setExercises([]);
+    setNewJoints([]);
     setDone(null);
     setFileName("");
   };
+
 
   const onFile = async (file: File) => {
     reset();
@@ -178,8 +184,19 @@ export default function ImportAdmin() {
 
       const injRows: InjuryRow[] = [];
       const exRows: ExerciseRow[] = [];
-      const stagedBySlug = new Map<string, { slug: string; name: string; joint_ids: string[] }>();
-      const stagedByName = new Map<string, { slug: string; name: string; joint_ids: string[] }>();
+      const stagedBySlug = new Map<string, { slug: string; name: string; joint_slugs: string[] }>();
+      const stagedByName = new Map<string, { slug: string; name: string; joint_slugs: string[] }>();
+      const newJointMap = new Map<string, { slug: string; name: string }>();
+
+      const resolveJoint = (token: string): { slug: string; id?: string } => {
+        const tl = token.toLowerCase();
+        const tSlug = slugify(token);
+        const existing = jointBySlug.get(tl) || jointBySlug.get(tSlug) || jointByName.get(tl);
+        if (existing) return { slug: existing.slug, id: existing.id };
+        // Stage a new joint to auto-create on import
+        if (!newJointMap.has(tSlug)) newJointMap.set(tSlug, { slug: tSlug, name: token });
+        return { slug: tSlug };
+      };
 
       if (injSheet) {
         const raw: any[] = XLSX.utils.sheet_to_json(injSheet, { defval: "" });
@@ -205,13 +222,9 @@ export default function ImportAdmin() {
           const joint_ids: string[] = [];
           const joint_slugs: string[] = [];
           jointTokens.forEach((t) => {
-            const j = jointBySlug.get(t.toLowerCase()) || jointByName.get(t.toLowerCase());
-            if (j) {
-              joint_ids.push(j.id);
-              joint_slugs.push(j.slug);
-            } else {
-              errors.push(`Joint not found: "${t}"`);
-            }
+            const res = resolveJoint(t);
+            joint_slugs.push(res.slug);
+            if (res.id) joint_ids.push(res.id);
           });
 
           const existing = pathBySlug.get(slug.toLowerCase());
@@ -231,7 +244,7 @@ export default function ImportAdmin() {
             existingId: existing?.id,
             errors,
           });
-          const stagedEntry = { slug, name, joint_ids };
+          const stagedEntry = { slug, name, joint_slugs };
           stagedBySlug.set(slug.toLowerCase(), stagedEntry);
           if (name) stagedByName.set(name.toLowerCase(), stagedEntry);
         });
@@ -285,10 +298,10 @@ export default function ImportAdmin() {
           const injury_ids: string[] = [];
           const injury_slugs: string[] = [];
           const jointIdSet = new Set<string>();
+          const jointSlugSet = new Set<string>();
           injuryTokens.forEach((t) => {
             const tl = t.toLowerCase();
             const tSlug = slugify(t);
-            // 1) existing slug, 2) existing name, 3) staged slug, 4) staged name
             const existingBySlug = pathBySlug.get(tl) || pathBySlug.get(tSlug);
             const existingByName = pathByName.get(tl);
             const staged =
@@ -303,7 +316,7 @@ export default function ImportAdmin() {
               injury_slugs.push(existingByName.slug);
             } else if (staged) {
               injury_slugs.push(staged.slug);
-              staged.joint_ids.forEach((id) => jointIdSet.add(id));
+              staged.joint_slugs.forEach((s) => jointSlugSet.add(s));
             } else {
               errors.push(`Injury not found: "${t}"`);
             }
@@ -325,6 +338,7 @@ export default function ImportAdmin() {
             injury_slugs,
             injury_ids,
             joint_ids: Array.from(jointIdSet),
+            joint_slugs: Array.from(jointSlugSet),
             difficulty,
             rehab_phase,
             sets_reps_time,
@@ -340,6 +354,9 @@ export default function ImportAdmin() {
           });
         });
       }
+
+      setNewJoints(Array.from(newJointMap.values()));
+
 
       setInjuries(injRows);
       setExercises(exRows);
@@ -372,6 +389,38 @@ export default function ImportAdmin() {
     try {
       let injCreated = 0, injUpdated = 0, injSkipped = 0;
       let exCreated = 0, exUpdated = 0, exSkipped = 0;
+      let jointsCreated = 0;
+
+      // 1) Ensure any staged new joints exist; build slug->id map for all joints
+      const { data: allJointsData } = await sb.from("body_locations").select("id, slug");
+      const jointIdBySlug = new Map<string, string>(
+        (allJointsData || []).map((j: any) => [String(j.slug).toLowerCase(), j.id])
+      );
+      for (const nj of newJoints) {
+        if (jointIdBySlug.has(nj.slug.toLowerCase())) continue;
+        const { data, error } = await sb
+          .from("body_locations")
+          .insert({ name: nj.name, slug: nj.slug, is_active: true })
+          .select("id")
+          .single();
+        if (error) throw new Error(`Create joint "${nj.name}": ${error.message}`);
+        jointIdBySlug.set(nj.slug.toLowerCase(), data.id);
+        jointsCreated++;
+      }
+
+      const resolveIds = (slugs: string[]) =>
+        slugs.map((s) => jointIdBySlug.get(s.toLowerCase())).filter((x): x is string => !!x);
+
+      // Resolve injury joint_ids from slugs (covers auto-created joints)
+      injuries.forEach((r) => {
+        r.joint_ids = resolveIds(r.joint_slugs);
+      });
+      exercises.forEach((r) => {
+        const fromSlugs = resolveIds(r.joint_slugs);
+        const merged = new Set<string>([...r.joint_ids, ...fromSlugs]);
+        r.joint_ids = Array.from(merged);
+      });
+
 
       for (const r of injuries) {
         if (r.action === "skip") { injSkipped++; continue; }
@@ -531,9 +580,11 @@ export default function ImportAdmin() {
       }
 
       setDone(
+        `Joints: ${jointsCreated} created. ` +
         `Injuries: ${injCreated} created, ${injUpdated} updated, ${injSkipped} skipped. ` +
         `Exercises: ${exCreated} created, ${exUpdated} updated, ${exSkipped} skipped.`
       );
+
       toast({ title: "Import complete" });
     } catch (e: any) {
       toast({ title: "Import failed", description: e.message, variant: "destructive" });
@@ -657,6 +708,20 @@ export default function ImportAdmin() {
               </AlertDescription>
             </Alert>
           )}
+
+          {newJoints.length > 0 && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>
+                {newJoints.length} new joint{newJoints.length === 1 ? "" : "s"} will be created
+              </AlertTitle>
+              <AlertDescription>
+                These joints don't exist yet and will be created automatically on import:{" "}
+                {newJoints.map((j) => j.name).join(", ")}.
+              </AlertDescription>
+            </Alert>
+          )}
+
 
           {injuries.length > 0 && (
             <Card className="p-4">
