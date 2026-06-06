@@ -495,6 +495,11 @@ export const UltrasoundAdminInner = () => {
         </div>
       </div>
 
+      <div className="mt-10">
+        <SharedContentEditor />
+      </div>
+
+
       {editing && (
         <InjectionEditor
           injection={editing}
