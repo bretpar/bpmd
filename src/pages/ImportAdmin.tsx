@@ -130,9 +130,11 @@ export default function ImportAdmin() {
   const reset = () => {
     setInjuries([]);
     setExercises([]);
+    setNewJoints([]);
     setDone(null);
     setFileName("");
   };
+
 
   const onFile = async (file: File) => {
     reset();
