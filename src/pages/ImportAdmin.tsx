@@ -109,7 +109,7 @@ type ExerciseRow = {
 
 const splitList = (s: string) =>
   s
-    .split(/[;|\n]+/)
+    .split(/[;\n]+/)
     .map((x) => x.trim())
     .filter(Boolean);
 
