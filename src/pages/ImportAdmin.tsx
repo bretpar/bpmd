@@ -178,7 +178,8 @@ export default function ImportAdmin() {
 
       const injRows: InjuryRow[] = [];
       const exRows: ExerciseRow[] = [];
-      const stagedInjurySlugs = new Map<string, { name: string; joint_ids: string[] }>();
+      const stagedBySlug = new Map<string, { slug: string; name: string; joint_ids: string[] }>();
+      const stagedByName = new Map<string, { slug: string; name: string; joint_ids: string[] }>();
 
       if (injSheet) {
         const raw: any[] = XLSX.utils.sheet_to_json(injSheet, { defval: "" });
@@ -230,7 +231,9 @@ export default function ImportAdmin() {
             existingId: existing?.id,
             errors,
           });
-          stagedInjurySlugs.set(slug.toLowerCase(), { name, joint_ids });
+          const stagedEntry = { slug, name, joint_ids };
+          stagedBySlug.set(slug.toLowerCase(), stagedEntry);
+          if (name) stagedByName.set(name.toLowerCase(), stagedEntry);
         });
       }
 
