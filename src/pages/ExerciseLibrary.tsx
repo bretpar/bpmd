@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import {
   ChevronRight,
   Search,
-  AlertTriangle,
+  
   Home as HomeIcon,
   Activity,
   Sparkles,
