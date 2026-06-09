@@ -17,14 +17,14 @@ import {
 } from "lucide-react";
 import { RehabExercise, useRehabExercises } from "@/hooks/useRehabExercises";
 
-// ---------- Disclaimer ----------
-const Disclaimer = () => (
-  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg p-4 flex gap-3">
-    <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-    <p className="text-sm text-amber-900 dark:text-amber-100 leading-relaxed">
-      These exercises are for general education and should not replace medical advice. Only perform
-      exercises recommended by your clinician. Stop if you develop worsening pain, numbness, tingling,
-      new weakness, or symptoms that concern you.
+// ---------- Safety Note (subtle, low-emphasis) ----------
+const SafetyNote = () => (
+  <div className="mt-10 pt-6 border-t border-border">
+    <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
+      <span className="font-medium text-foreground/80">Safety note:</span>{" "}
+      These exercises are for general education and should not replace care from your clinician.
+      Stop if symptoms worsen, pain becomes sharp, or you develop numbness, tingling, new weakness,
+      or other concerning symptoms.
     </p>
   </div>
 );
