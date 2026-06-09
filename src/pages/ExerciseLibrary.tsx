@@ -20,12 +20,14 @@ import { RehabExercise, useRehabExercises } from "@/hooks/useRehabExercises";
 // ---------- Safety Note (subtle, low-emphasis) ----------
 const SafetyNote = () => (
   <div className="mt-10 pt-6 border-t border-border">
-    <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
-      <span className="font-medium text-foreground/80">Safety note:</span>{" "}
-      These exercises are for general education and should not replace care from your clinician.
-      Stop if symptoms worsen, pain becomes sharp, or you develop numbness, tingling, new weakness,
-      or other concerning symptoms.
-    </p>
+    <div className="bg-muted/50 rounded-xl p-5 md:p-6">
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        <span className="font-medium text-foreground/80">Safety note:</span>{" "}
+        These exercises are for general education and should not replace care from your clinician.
+        Stop if symptoms worsen, pain becomes sharp, or you develop numbness, tingling, new weakness,
+        or other concerning symptoms.
+      </p>
+    </div>
   </div>
 );
 
