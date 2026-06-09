@@ -343,20 +343,39 @@ export const UltrasoundDetail = () => {
               Pre- and post-injection instructions are the same across all ultrasound-guided procedures.
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button asChild variant="outline" size="sm">
-                <Link to="/ultrasound#pre-care">Pre-injection instructions</Link>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <Link to="/ultrasound#post-care">Post-injection care</Link>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <Link to="/ultrasound#risks">Risks & side effects</Link>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <Link to="/ultrasound#when-to-call">When to call the clinic</Link>
-              </Button>
+              {modalItems.map((item) => (
+                <Button
+                  key={item.key}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setActiveModal(item.key)}
+                >
+                  {item.label}
+                </Button>
+              ))}
             </div>
           </section>
+
+          <Dialog open={!!activeModal} onOpenChange={(open) => !open && setActiveModal(null)}>
+            <DialogContent className="max-w-lg w-[calc(100%-2rem)] max-h-[80vh] overflow-y-auto p-0">
+              <DialogHeader className="px-6 pt-6 pb-2 sticky top-0 bg-background z-10">
+                <DialogTitle>{activeBlock?.title || ""}</DialogTitle>
+                <DialogDescription className="sr-only">
+                  Shared injection instructions
+                </DialogDescription>
+              </DialogHeader>
+              <div className="px-6 pb-6">
+                <div className="text-muted-foreground whitespace-pre-line leading-relaxed">
+                  {activeBlock?.body || "Loading…"}
+                </div>
+                <div className="mt-6 flex justify-end">
+                  <Button variant="outline" onClick={() => setActiveModal(null)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <div className="mt-10 p-5 rounded-lg bg-muted/40 border text-sm text-muted-foreground">
             {DISCLAIMER}
