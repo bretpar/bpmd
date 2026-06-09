@@ -10,21 +10,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import {
   ChevronRight,
   Search,
-  AlertTriangle,
+  
   Home as HomeIcon,
   Activity,
   Sparkles,
 } from "lucide-react";
 import { RehabExercise, useRehabExercises } from "@/hooks/useRehabExercises";
 
-// ---------- Disclaimer ----------
-const Disclaimer = () => (
-  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg p-4 flex gap-3">
-    <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-    <p className="text-sm text-amber-900 dark:text-amber-100 leading-relaxed">
-      These exercises are for general education and should not replace medical advice. Only perform
-      exercises recommended by your clinician. Stop if you develop worsening pain, numbness, tingling,
-      new weakness, or symptoms that concern you.
+// ---------- Safety Note (subtle, low-emphasis) ----------
+const SafetyNote = () => (
+  <div className="mt-10 pt-6 border-t border-border">
+    <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
+      <span className="font-medium text-foreground/80">Safety note:</span>{" "}
+      These exercises are for general education and should not replace care from your clinician.
+      Stop if symptoms worsen, pain becomes sharp, or you develop numbness, tingling, new weakness,
+      or other concerning symptoms.
     </p>
   </div>
 );
@@ -130,9 +130,9 @@ const DetailModal = ({ ex, onClose }: { ex: RehabExercise | null; onClose: () =>
           )}
           {ex.equipment && <Section title="Equipment">{ex.equipment}</Section>}
           {ex.precautions && (
-            <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3">
-              <p className="text-sm font-semibold text-destructive mb-1">Stop if</p>
-              <p className="text-foreground/80 whitespace-pre-line">{ex.precautions}</p>
+            <div className="bg-muted/40 border border-border rounded-lg p-3">
+              <p className="text-sm font-semibold text-foreground/80 mb-1">Stop if</p>
+              <p className="text-foreground/70 whitespace-pre-line">{ex.precautions}</p>
             </div>
           )}
         </div>
@@ -286,7 +286,7 @@ export const ExerciseLibraryHome = () => {
             />
           </form>
 
-          <Disclaimer />
+          <SafetyNote />
         </div>
       </section>
     </Layout>
@@ -327,9 +327,6 @@ export const RegionDetail = () => {
             Choose general {displayName.toLowerCase()} exercises or select a specific {displayName.toLowerCase()} condition below.
           </p>
 
-          <div className="mb-6">
-            <Disclaimer />
-          </div>
 
           {loading ? (
             <p className="text-center py-12 text-muted-foreground">Loading...</p>
@@ -370,6 +367,7 @@ export const RegionDetail = () => {
               )}
             </div>
           )}
+          <SafetyNote />
         </div>
       </section>
     </Layout>
@@ -409,9 +407,6 @@ export const RegionGeneralDetail = () => {
           <p className="text-muted-foreground text-base mb-6">
             Foundational mobility, stretching, and strengthening routines for the {displayName.toLowerCase()}.
           </p>
-          <div className="mb-6">
-            <Disclaimer />
-          </div>
           {loading ? (
             <p className="text-center py-12 text-muted-foreground">Loading...</p>
           ) : (
@@ -420,6 +415,7 @@ export const RegionGeneralDetail = () => {
               emptyMessage="General exercises coming soon for this joint."
             />
           )}
+          <SafetyNote />
         </div>
       </section>
     </Layout>
@@ -457,9 +453,6 @@ export const RegionPathologyDetail = () => {
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
             {pathologyName}
           </h1>
-          <div className="mb-6">
-            <Disclaimer />
-          </div>
           {loading ? (
             <p className="text-center py-12 text-muted-foreground">Loading...</p>
           ) : (
@@ -468,6 +461,7 @@ export const RegionPathologyDetail = () => {
               emptyMessage="Exercises for this condition are coming soon. Please ask your clinician for guidance."
             />
           )}
+          <SafetyNote />
         </div>
       </section>
     </Layout>
