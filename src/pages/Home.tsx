@@ -6,9 +6,9 @@ import ContactCTA from "@/components/ContactCTA";
 import heroTrack from "@/assets/hero-track.jpg";
 
 const interestCards = [
-  { title: "Ortho Compass", description: "Orthopedic resource hub for evidence-based information", icon: Compass, link: "/services" },
   { title: "Ultrasound Injections", description: "Guided injection procedures for precision treatment", icon: Waves, link: "/ultrasound" },
   { title: "Therapy Exercises", description: "Patient-friendly exercises organized by joint and condition", icon: Dumbbell, link: "/exercise-library" },
+  { title: "Ortho Compass", description: "Orthopedic resource hub for evidence-based information", icon: Compass, link: "/services" },
   { title: "PT Locations", description: "Find trusted physical therapy clinics nearby", icon: MapPin, link: "/pt-locations" },
 ];
 
