@@ -6,8 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Image as ImageIcon, ChevronRight, Stethoscope, Calendar } from "lucide-react";
+import { ArrowRight, Image as ImageIcon, ChevronRight, Stethoscope, Calendar, X } from "lucide-react";
 
 const sb = supabase as any;
 
