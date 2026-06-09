@@ -17,13 +17,16 @@ const About = () => (
           <p className="text-primary font-medium mb-2 uppercase tracking-wide text-sm">About</p>
           <h1 className="text-4xl font-bold text-foreground mb-6">Brendan Parker, MD</h1>
           <p className="text-lg text-muted-foreground leading-relaxed mb-4">
-            Dr. Brendan Parker is a physician specializing in non-operative sports medicine, dedicated to integrating evidence-based healthcare into patient-focused treatments.
+            Dr. Brendan Parker is a physician specializing in non-operative sports medicine, with a passion for helping patients recover from injuries and return to the activities they value most. As a lifelong athlete who played multiple sports, including collegiate volleyball, and completed two Ironman 140.6 events, Dr. Parker understands the importance of staying active and the frustration that can come with injury. His goal is to help athletes of all levels—from high school and collegiate competitors to weekend warriors—get back to doing what they love.
           </p>
           <p className="text-muted-foreground leading-relaxed mb-4">
-            With a philosophy centered on viewing conditions from a non-surgical perspective, Dr. Parker strives to provide treatment choices that empower patients. His goal is to discuss strategies that enable patients to return to the activities they value most.
+            Originally from Seattle, Dr. Parker studied and trained across several states before returning home to Washington. He attended the University of Toledo College of Medicine in Ohio, then completed his Emergency Medicine residency in Chicago, Illinois. During residency, he volunteered in medical tents at multiple athletic events throughout the city, where he developed a strong foundation in the emergency care of athletes. Wanting to expand his expertise beyond acute injury management, he pursued fellowship training in Non-Operative Sports Medicine at the University of Arizona in Tucson.
+          </p>
+          <p className="text-muted-foreground leading-relaxed mb-4">
+            Now practicing in Edmonds, Washington, Dr. Parker combines his background in Emergency Medicine and Sports Medicine to provide evidence-based, patient-focused care. He approaches injuries from a non-surgical perspective and works closely with each patient to develop personalized treatment plans. His care incorporates musculoskeletal diagnostics, ultrasound-guided procedures, rehabilitation strategies, and shared decision-making to help patients understand their options and move toward their goals.
           </p>
           <p className="text-muted-foreground leading-relaxed mb-12">
-            Located in Edmonds, Washington, Dr. Parker works closely with patients to develop personalized treatment plans, leveraging the latest in musculoskeletal diagnostics, ultrasound-guided procedures, and rehabilitation protocols.
+            Dr. Parker lives in Seattle with his wife and three children. As a family, they enjoy exploring the city and attending local sporting events. Although his Ironman racing days are behind him, he still enjoys playing soccer and running along the Burke-Gilman Trail. He brings that same love of movement and active living to the care he provides every patient.
           </p>
         </div>
 
