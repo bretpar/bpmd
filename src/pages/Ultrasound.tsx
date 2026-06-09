@@ -248,6 +248,17 @@ export const UltrasoundDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const [inj, setInj] = useState<Injection | null>(null);
   const [loading, setLoading] = useState(true);
+  const blocks = useSharedContent();
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+
+  const modalItems = [
+    { key: "pre_care", label: "Pre-injection instructions" },
+    { key: "post_care", label: "Post-injection care" },
+    { key: "risks", label: "Risks & side effects" },
+    { key: "when_to_call", label: "When to call the clinic" },
+  ];
+
+  const activeBlock = activeModal ? blocks[activeModal] : null;
 
 
   useEffect(() => {
