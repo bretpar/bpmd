@@ -130,9 +130,9 @@ const DetailModal = ({ ex, onClose }: { ex: RehabExercise | null; onClose: () =>
           )}
           {ex.equipment && <Section title="Equipment">{ex.equipment}</Section>}
           {ex.precautions && (
-            <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3">
-              <p className="text-sm font-semibold text-destructive mb-1">Stop if</p>
-              <p className="text-foreground/80 whitespace-pre-line">{ex.precautions}</p>
+            <div className="bg-muted/40 border border-border rounded-lg p-3">
+              <p className="text-sm font-semibold text-foreground/80 mb-1">Stop if</p>
+              <p className="text-foreground/70 whitespace-pre-line">{ex.precautions}</p>
             </div>
           )}
         </div>
