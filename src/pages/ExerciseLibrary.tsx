@@ -367,6 +367,7 @@ export const RegionDetail = () => {
               )}
             </div>
           )}
+          <SafetyNote />
         </div>
       </section>
     </Layout>
@@ -406,9 +407,6 @@ export const RegionGeneralDetail = () => {
           <p className="text-muted-foreground text-base mb-6">
             Foundational mobility, stretching, and strengthening routines for the {displayName.toLowerCase()}.
           </p>
-          <div className="mb-6">
-            <Disclaimer />
-          </div>
           {loading ? (
             <p className="text-center py-12 text-muted-foreground">Loading...</p>
           ) : (
@@ -417,6 +415,7 @@ export const RegionGeneralDetail = () => {
               emptyMessage="General exercises coming soon for this joint."
             />
           )}
+          <SafetyNote />
         </div>
       </section>
     </Layout>
@@ -454,9 +453,6 @@ export const RegionPathologyDetail = () => {
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
             {pathologyName}
           </h1>
-          <div className="mb-6">
-            <Disclaimer />
-          </div>
           {loading ? (
             <p className="text-center py-12 text-muted-foreground">Loading...</p>
           ) : (
@@ -465,6 +461,7 @@ export const RegionPathologyDetail = () => {
               emptyMessage="Exercises for this condition are coming soon. Please ask your clinician for guidance."
             />
           )}
+          <SafetyNote />
         </div>
       </section>
     </Layout>
