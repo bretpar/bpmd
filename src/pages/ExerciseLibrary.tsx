@@ -327,9 +327,6 @@ export const RegionDetail = () => {
             Choose general {displayName.toLowerCase()} exercises or select a specific {displayName.toLowerCase()} condition below.
           </p>
 
-          <div className="mb-6">
-            <Disclaimer />
-          </div>
 
           {loading ? (
             <p className="text-center py-12 text-muted-foreground">Loading...</p>
