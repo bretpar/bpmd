@@ -286,7 +286,7 @@ export const ExerciseLibraryHome = () => {
             />
           </form>
 
-          <Disclaimer />
+          <SafetyNote />
         </div>
       </section>
     </Layout>
