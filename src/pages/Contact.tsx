@@ -10,6 +10,19 @@ const Contact = () => {
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [copied, setCopied] = useState(false);
+  const fullAddress = "21401 72nd Ave W, Edmonds, WA 98026";
+
+  const copyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(fullAddress);
+      setCopied(true);
+      toast({ title: "Address copied to clipboard" });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast({ title: "Failed to copy address", variant: "destructive" });
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
