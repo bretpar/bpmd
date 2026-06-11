@@ -3,13 +3,26 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Phone, MapPin, Mail, CheckCircle } from "lucide-react";
+import { Phone, MapPin, Mail, CheckCircle, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Contact = () => {
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [copied, setCopied] = useState(false);
+  const fullAddress = "21401 72nd Ave W, Edmonds, WA 98026";
+
+  const copyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(fullAddress);
+      setCopied(true);
+      toast({ title: "Address copied to clipboard" });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast({ title: "Failed to copy address", variant: "destructive" });
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,10 +65,22 @@ const Contact = () => {
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <MapPin className="w-5 h-5 text-primary" />
                     </div>
-                    <div>
+                  <div className="flex-1">
                       <p className="font-medium text-foreground">Address</p>
                       <p>21401 72nd Ave W<br />Edmonds, WA 98026</p>
                     </div>
+                    <button
+                      onClick={copyAddress}
+                      className="shrink-0 p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+                      aria-label="Copy address to clipboard"
+                      title="Copy address"
+                    >
+                      {copied ? (
+                        <Check className="w-4 h-4 text-primary" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>
