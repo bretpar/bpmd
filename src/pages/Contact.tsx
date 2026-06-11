@@ -52,10 +52,22 @@ const Contact = () => {
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <MapPin className="w-5 h-5 text-primary" />
                     </div>
-                    <div>
+                  <div className="flex-1">
                       <p className="font-medium text-foreground">Address</p>
                       <p>21401 72nd Ave W<br />Edmonds, WA 98026</p>
                     </div>
+                    <button
+                      onClick={copyAddress}
+                      className="shrink-0 p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+                      aria-label="Copy address to clipboard"
+                      title="Copy address"
+                    >
+                      {copied ? (
+                        <Check className="w-4 h-4 text-primary" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>
