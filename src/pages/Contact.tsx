@@ -3,7 +3,7 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Phone, MapPin, Mail, CheckCircle } from "lucide-react";
+import { Phone, MapPin, Mail, CheckCircle, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Contact = () => {
