@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   ChevronRight,
   Search,
@@ -16,6 +16,10 @@ import {
   Sparkles,
 } from "lucide-react";
 import { RehabExercise, useRehabExercises } from "@/hooks/useRehabExercises";
+
+const PATIENT_EXERCISES_LABEL = "Patient Exercises";
+const PATIENT_SAFETY_GUIDANCE =
+  "Stop if pain sharply worsens, symptoms travel down the arm, numbness/tingling develops, weakness worsens, or you cannot raise the arm. Seek medical care after trauma, severe pain, fever, major swelling, or rapidly worsening function.";
 
 // ---------- Safety Note (subtle, low-emphasis) ----------
 const SafetyNote = () => (
@@ -102,18 +106,50 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </div>
 );
 
+const looksLikeDosage = (value?: string | null) =>
+  !!value && /\b(set|sets|rep|reps|hold|holds|second|seconds|minute|minutes|daily|times?|x|×)\b/i.test(value);
+
+const splitExerciseDetails = (ex: RehabExercise) => {
+  const equipmentRaw = ex.equipment?.trim() || "";
+  const instructionsRaw = ex.instructions?.trim() || "";
+  const dosageFromInstructions = instructionsRaw.match(/(?:Sets\s*\/\s*Reps\s*\/\s*Time|Sets\s*\/\s*Reps|Dosage):\s*([^\n]+)/i)?.[1]?.trim() || "";
+  const dosage = looksLikeDosage(equipmentRaw) ? equipmentRaw : dosageFromInstructions;
+  const instructions = dosageFromInstructions
+    ? instructionsRaw.replace(/(?:\n\s*)?Sets\s*\/\s*Reps\s*\/\s*Time:\s*[^\n]+/i, "").trim()
+    : instructionsRaw;
+  const equipment = equipmentRaw && !looksLikeDosage(equipmentRaw) ? equipmentRaw : "";
+  const holdMatch = dosage.match(/(?:hold|holds?)\s*([\w–-]+(?:\s*to\s*\w+)?\s*seconds?)/i);
+  const frequencyMatch = dosage.match(/(\d[\w–-]*\s*times?\s*(?:per\s*)?(?:daily|day|week)|\d[\w–-]*\s*x\s*(?:daily|day|week)|daily)/i);
+
+  return {
+    equipment: equipment || "None",
+    setsReps: dosage || "",
+    holdTime: holdMatch?.[1] || "",
+    frequency: frequencyMatch?.[1] || "",
+    instructions,
+  };
+};
+
 const DetailModal = ({ ex, onClose }: { ex: RehabExercise | null; onClose: () => void }) => {
   if (!ex) return null;
+  const details = splitExerciseDetails(ex);
   return (
     <Dialog open={!!ex} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">{ex.name}</DialogTitle>
+          <DialogDescription>
+            Exercise instructions, dosage, equipment, media availability, and safety guidance.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-5 text-sm">
-          {ex.image_url && (
-            <img src={ex.image_url} alt={ex.name} className="w-full rounded-lg" />
-          )}
+          {ex.image_url ? (
+            <img src={ex.image_url} alt={`${ex.name} demonstration`} className="w-full rounded-lg" />
+          ) : !ex.video_url ? (
+            <div className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground">
+              Image/video coming soon.
+            </div>
+          ) : null}
           {ex.video_url && (
             <Section title="Video">
               <a
@@ -127,16 +163,27 @@ const DetailModal = ({ ex, onClose }: { ex: RehabExercise | null; onClose: () =>
             </Section>
           )}
           {ex.description && <Section title="Why this helps">{ex.description}</Section>}
-          {ex.instructions && (
-            <Section title="How to do it">{ex.instructions}</Section>
+          {details.instructions && (
+            <Section title="How to do it">{details.instructions}</Section>
           )}
-          {ex.equipment && <Section title="Equipment">{ex.equipment}</Section>}
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Section title="Equipment">{details.equipment}</Section>
+            {details.setsReps && <Section title="Sets/Reps">{details.setsReps}</Section>}
+            {details.holdTime && <Section title="Hold Time">{details.holdTime}</Section>}
+            {details.frequency && <Section title="Frequency">{details.frequency}</Section>}
+          </div>
           {ex.precautions && (
             <div className="bg-muted/40 border border-border rounded-lg p-3">
               <p className="text-sm font-semibold text-foreground/80 mb-1">Stop if</p>
               <p className="text-foreground/70 whitespace-pre-line">{ex.precautions}</p>
             </div>
           )}
+          <div className="bg-muted/40 border border-border rounded-lg p-3">
+            <p className="text-sm font-semibold text-foreground/80 mb-1">
+              When to stop or contact a clinician
+            </p>
+            <p className="text-foreground/70">{PATIENT_SAFETY_GUIDANCE}</p>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -150,32 +197,39 @@ const ExerciseCard = ({
 }: {
   ex: RehabExercise;
   onView: (e: RehabExercise) => void;
-}) => (
-  <Card className="flex flex-col h-full hover:shadow-md transition-shadow">
-    {ex.image_url && (
-      <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
-        <img src={ex.image_url} alt={ex.name} className="w-full h-full object-cover" loading="lazy" />
-      </div>
-    )}
-    <CardContent className="p-5 flex-1 flex flex-col gap-3">
-      <h3 className="font-semibold text-lg text-foreground leading-snug">{ex.name}</h3>
-      {ex.description && (
-        <p className="text-sm text-muted-foreground line-clamp-3">{ex.description}</p>
-      )}
-      <div className="flex flex-wrap gap-1.5">
-        {ex.difficulty && (
-          <Badge variant="outline" className="capitalize">{ex.difficulty}</Badge>
+}) => {
+  const details = splitExerciseDetails(ex);
+
+  return (
+    <Card className="flex flex-col h-full hover:shadow-md transition-shadow">
+      {ex.image_url ? (
+        <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
+          <img src={ex.image_url} alt={ex.name} className="w-full h-full object-cover" loading="lazy" />
+        </div>
+      ) : null}
+      <CardContent className="p-5 flex-1 flex flex-col gap-3">
+        <h3 className="font-semibold text-lg text-foreground leading-snug">{ex.name}</h3>
+        {ex.description && (
+          <p className="text-sm text-muted-foreground line-clamp-3">{ex.description}</p>
         )}
-        {ex.equipment && (
-          <Badge variant="secondary" className="font-normal">{ex.equipment}</Badge>
-        )}
-      </div>
-      <Button variant="outline" size="sm" className="mt-auto" onClick={() => onView(ex)}>
-        View Details
-      </Button>
-    </CardContent>
-  </Card>
-);
+        <div className="flex flex-wrap gap-1.5">
+          {ex.difficulty && (
+            <Badge variant="outline" className="capitalize">{ex.difficulty}</Badge>
+          )}
+          {details.equipment !== "None" && (
+            <Badge variant="secondary" className="font-normal">{details.equipment}</Badge>
+          )}
+          {details.setsReps && (
+            <Badge variant="secondary" className="font-normal">{details.setsReps}</Badge>
+          )}
+        </div>
+        <Button variant="outline" size="sm" className="mt-auto" onClick={() => onView(ex)}>
+          View Details
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
 
 const ExerciseList = ({
   exercises,
@@ -257,7 +311,7 @@ export const ExerciseLibraryHome = () => {
               Patient Resources
             </p>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-              What joint hurts?
+              Patient Exercise Library
             </h1>
             <p className="text-muted-foreground text-base max-w-xl mx-auto">
               Pick the area you'd like exercises for. You'll see general routines and condition-specific options.
@@ -318,7 +372,7 @@ export const RegionDetail = () => {
         <div className="container mx-auto px-4 lg:px-8 max-w-3xl">
           <Crumbs
             items={[
-              { label: "Therapy Exercises", to: "/exercise-library" },
+              { label: PATIENT_EXERCISES_LABEL, to: "/exercise-library" },
               { label: displayName },
             ]}
           />
@@ -398,7 +452,7 @@ export const RegionGeneralDetail = () => {
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
           <Crumbs
             items={[
-              { label: "Therapy Exercises", to: "/exercise-library" },
+              { label: PATIENT_EXERCISES_LABEL, to: "/exercise-library" },
               { label: displayName, to: `/exercise-library/region/${slug}` },
               { label: "General Exercises" },
             ]}
@@ -447,7 +501,7 @@ export const RegionPathologyDetail = () => {
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
           <Crumbs
             items={[
-              { label: "Therapy Exercises", to: "/exercise-library" },
+              { label: PATIENT_EXERCISES_LABEL, to: "/exercise-library" },
               { label: displayName, to: `/exercise-library/region/${slug}` },
               { label: pathologyName },
             ]}
@@ -500,12 +554,12 @@ export const ExerciseSearch = () => {
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
           <Crumbs
             items={[
-              { label: "Therapy Exercises", to: "/exercise-library" },
+              { label: PATIENT_EXERCISES_LABEL, to: "/exercise-library" },
               { label: "Search" },
             ]}
           />
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-            Search Exercises
+            Search Patient Exercises
           </h1>
           <div className="relative mb-6">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

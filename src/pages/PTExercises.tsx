@@ -31,7 +31,7 @@ const PTExercises = () => {
         <div className="container mx-auto px-4 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-12">
             <p className="text-primary font-medium mb-2 uppercase tracking-wide text-sm">Physical Therapy</p>
-            <h1 className="text-4xl font-bold text-foreground mb-4">Home Exercises</h1>
+            <h1 className="text-4xl font-bold text-foreground mb-4">Patient Exercise Library</h1>
             <p className="text-muted-foreground text-lg">
               Structured rehabilitation exercises organized by body region. Select a region below to view exercises.
             </p>
