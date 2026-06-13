@@ -6,7 +6,7 @@ import { Compass, Waves, Dumbbell, MapPin, ArrowRight, ExternalLink, BookOpen } 
 const services = [
   { icon: Compass, title: "Orthopedic Consultation", description: "Comprehensive musculoskeletal evaluation and non-operative treatment planning for a wide range of conditions.", link: "/contact" },
   { icon: Waves, title: "Ultrasound-Guided Injections", description: "Precise, image-guided injection procedures for targeted pain relief and accelerated healing.", link: "/ultrasound" },
-  { icon: Dumbbell, title: "Rehabilitation Programs", description: "Structured exercise programs organized by body region to support your recovery journey.", link: "/exercise-library" },
+  { icon: Dumbbell, title: "Patient Exercises", description: "Structured exercise programs organized by body region to support your recovery journey.", link: "/exercise-library" },
   { icon: MapPin, title: "Physical Therapy Referrals", description: "Trusted network of physical therapy clinics near our office for hands-on rehabilitation.", link: "/pt-locations" },
 ];
 

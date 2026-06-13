@@ -8,7 +8,7 @@ const baseNavLinks = [
   { label: "Home", path: "/" },
   { label: "About", path: "/about" },
   { label: "Services", path: "/services" },
-  { label: "Therapy Exercises", path: "/exercise-library", matchPrefix: "/exercise-library" },
+  { label: "Patient Exercises", path: "/exercise-library", matchPrefix: "/exercise-library" },
   { label: "PT Locations", path: "/pt-locations" },
   { label: "Ultrasound", path: "/ultrasound" },
   { label: "Contact", path: "/contact" },
@@ -61,6 +61,8 @@ const Header = () => {
 
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileOpen}
           className="lg:hidden p-2 rounded-md text-muted-foreground hover:bg-muted"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

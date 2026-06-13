@@ -44,6 +44,7 @@ const App = () => (
             <Route path="/ultrasound" element={<Ultrasound />} />
             <Route path="/ultrasound/:slug" element={<UltrasoundDetail />} />
             <Route path="/ultrasound-admin" element={<UltrasoundAdmin />} />
+            <Route path="/rehab_exercises" element={<Navigate to="/exercise-library" replace />} />
             <Route path="/injuries" element={<Navigate to="/exercise-library" replace />} />
             <Route path="/injuries/:slug" element={<Navigate to="/exercise-library" replace />} />
             <Route path="/pt-exercises" element={<PTExercises />} />
