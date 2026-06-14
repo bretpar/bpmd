@@ -227,6 +227,15 @@ const Ultrasound = () => {
         title="Ultrasound-Guided Injections | Brendan Parker, MD"
         description="Precise, image-guided injections for joint and soft-tissue pain. Learn about ultrasound-guided procedures offered in Edmonds, WA."
         path="/ultrasound"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "MedicalWebPage",
+          "name": "Ultrasound-Guided Injections | Brendan Parker, MD",
+          "description": "Precise, image-guided injections for joint and soft-tissue pain. Learn about ultrasound-guided procedures offered in Edmonds, WA.",
+          "author": { "@type": "Person", "name": "Brendan Parker, MD" },
+          "publisher": { "@type": "MedicalBusiness", "name": "Brendan Parker, MD — Sports Medicine" },
+          "url": "https://brendanparkermd.com/ultrasound"
+        }}
       />
       <Hero />
       <SharedIntro blocks={blocks} />
