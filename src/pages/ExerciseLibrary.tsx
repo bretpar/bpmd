@@ -309,6 +309,15 @@ export const ExerciseLibraryHome = () => {
         title="Patient Exercise Library | Brendan Parker, MD"
         description="Browse patient-friendly rehabilitation exercises organized by body region and condition. Curated by Dr. Brendan Parker for sports medicine recovery."
         path="/exercise-library"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": "Patient Exercise Library",
+          "description": "Browse patient-friendly rehabilitation exercises organized by body region and condition. Curated by Dr. Brendan Parker for sports medicine recovery.",
+          "author": { "@type": "Person", "name": "Brendan Parker, MD" },
+          "publisher": { "@type": "MedicalBusiness", "name": "Brendan Parker, MD — Sports Medicine" },
+          "url": "https://brendanparkermd.com/exercise-library"
+        }}
       />
       <section className="py-10 md:py-16">
         <div className="container mx-auto px-4 lg:px-8 max-w-3xl">
@@ -378,6 +387,15 @@ export const RegionDetail = () => {
         title={`${displayName} Exercises | Brendan Parker, MD`}
         description={`General and condition-specific rehabilitation exercises for the ${displayName}. Browse curated routines from Dr. Brendan Parker's sports medicine practice.`}
         path={`/exercise-library/region/${slug}`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": `${displayName} Exercises`,
+          "description": `General and condition-specific rehabilitation exercises for the ${displayName}. Browse curated routines from Dr. Brendan Parker's sports medicine practice.`,
+          "author": { "@type": "Person", "name": "Brendan Parker, MD" },
+          "publisher": { "@type": "MedicalBusiness", "name": "Brendan Parker, MD — Sports Medicine" },
+          "url": `https://brendanparkermd.com/exercise-library/region/${slug}`
+        }}
       />
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4 lg:px-8 max-w-3xl">
@@ -463,6 +481,15 @@ export const RegionGeneralDetail = () => {
         title={`General ${displayName} Exercises | Brendan Parker, MD`}
         description={`Foundational mobility, stretching, and strengthening exercises for the ${displayName}. Patient-friendly rehabilitation routines from Dr. Brendan Parker.`}
         path={`/exercise-library/region/${slug}/general`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": `General ${displayName} Exercises`,
+          "description": `Foundational mobility, stretching, and strengthening exercises for the ${displayName}. Patient-friendly rehabilitation routines from Dr. Brendan Parker.`,
+          "author": { "@type": "Person", "name": "Brendan Parker, MD" },
+          "publisher": { "@type": "MedicalBusiness", "name": "Brendan Parker, MD — Sports Medicine" },
+          "url": `https://brendanparkermd.com/exercise-library/region/${slug}/general`
+        }}
       />
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
@@ -517,6 +544,15 @@ export const RegionPathologyDetail = () => {
         title={`${pathologyName} Exercises | Brendan Parker, MD`}
         description={`Rehabilitation exercises for ${pathologyName} in the ${displayName}. Recovery routines curated by Dr. Brendan Parker for sports medicine patients.`}
         path={`/exercise-library/region/${slug}/pathology/${pathologySlug}`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": `${pathologyName} Exercises`,
+          "description": `Rehabilitation exercises for ${pathologyName} in the ${displayName}. Recovery routines curated by Dr. Brendan Parker for sports medicine patients.`,
+          "author": { "@type": "Person", "name": "Brendan Parker, MD" },
+          "publisher": { "@type": "MedicalBusiness", "name": "Brendan Parker, MD — Sports Medicine" },
+          "url": `https://brendanparkermd.com/exercise-library/region/${slug}/pathology/${pathologySlug}`
+        }}
       />
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
@@ -575,6 +611,15 @@ export const ExerciseSearch = () => {
         title="Search Patient Exercises | Brendan Parker, MD"
         description="Search the patient exercise library for rehabilitation routines by condition, body region, or exercise name. Curated by Dr. Brendan Parker."
         path="/exercise-library/search"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": "Search Patient Exercises",
+          "description": "Search the patient exercise library for rehabilitation routines by condition, body region, or exercise name. Curated by Dr. Brendan Parker.",
+          "author": { "@type": "Person", "name": "Brendan Parker, MD" },
+          "publisher": { "@type": "MedicalBusiness", "name": "Brendan Parker, MD — Sports Medicine" },
+          "url": "https://brendanparkermd.com/exercise-library/search"
+        }}
       />
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">

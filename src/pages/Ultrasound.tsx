@@ -227,6 +227,15 @@ const Ultrasound = () => {
         title="Ultrasound-Guided Injections | Brendan Parker, MD"
         description="Precise, image-guided injections for joint and soft-tissue pain. Learn about ultrasound-guided procedures offered in Edmonds, WA."
         path="/ultrasound"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "MedicalWebPage",
+          "name": "Ultrasound-Guided Injections | Brendan Parker, MD",
+          "description": "Precise, image-guided injections for joint and soft-tissue pain. Learn about ultrasound-guided procedures offered in Edmonds, WA.",
+          "author": { "@type": "Person", "name": "Brendan Parker, MD" },
+          "publisher": { "@type": "MedicalBusiness", "name": "Brendan Parker, MD — Sports Medicine" },
+          "url": "https://brendanparkermd.com/ultrasound"
+        }}
       />
       <Hero />
       <SharedIntro blocks={blocks} />
@@ -317,6 +326,17 @@ export const UltrasoundDetail = () => {
         title={inj.seo_title || `${inj.name} | Ultrasound-Guided Injection`}
         description={inj.seo_description || inj.short_summary || `Learn about ${inj.name}, an ultrasound-guided injection offered by Dr. Brendan Parker in Edmonds, WA.`}
         path={`/ultrasound/${inj.slug}`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "MedicalProcedure",
+          "name": inj.name,
+          "description": inj.seo_description || inj.short_summary || `Learn about ${inj.name}, an ultrasound-guided injection offered by Dr. Brendan Parker in Edmonds, WA.`,
+          "procedureType": "Ultrasound-Guided Injection",
+          "bodyLocation": inj.body_region,
+          "url": `https://brendanparkermd.com/ultrasound/${inj.slug}`,
+          "author": { "@type": "Person", "name": "Brendan Parker, MD" },
+          "publisher": { "@type": "MedicalBusiness", "name": "Brendan Parker, MD — Sports Medicine" }
+        }}
       />
       <section className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground py-12 md:py-16">
         <div className="container mx-auto px-4 lg:px-8">

@@ -17,6 +17,13 @@ const Services = () => (
       title="Services | Brendan Parker, MD Sports Medicine"
       description="Non-operative sports medicine services in Edmonds, WA: consultations, ultrasound-guided injections, patient exercises, and physical therapy referrals."
       path="/services"
+      jsonLd={{
+        "@context": "https://schema.org",
+        "@type": "MedicalWebPage",
+        "name": "Services | Brendan Parker, MD Sports Medicine",
+        "description": "Non-operative sports medicine services in Edmonds, WA: consultations, ultrasound-guided injections, patient exercises, and physical therapy referrals.",
+        "url": "https://brendanparkermd.com/services"
+      }}
     />
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4 lg:px-8">
