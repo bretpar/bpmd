@@ -147,7 +147,7 @@ function InjectionCard({ inj }: { inj: Injection }) {
         )}
         <div className="mt-auto flex flex-wrap gap-2">
           <Button asChild size="sm" variant="outline" className="gap-1">
-            <Link to={`/ultrasound/${inj.slug}`}>Learn more <ChevronRight className="w-4 h-4" /></Link>
+            <Link to={`/ultrasound/${inj.slug}`}>Learn about {inj.name} <ChevronRight className="w-4 h-4" /></Link>
           </Button>
           {inj.accepts_appointments && (
             <Button asChild size="sm" className="gap-1">

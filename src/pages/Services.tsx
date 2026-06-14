@@ -38,10 +38,10 @@ const Services = () => (
               <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/15 transition-colors">
                 <s.icon className="w-7 h-7 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">{s.title}</h3>
+              <h2 className="text-xl font-semibold text-foreground mb-2">{s.title}</h2>
               <p className="text-muted-foreground mb-4">{s.description}</p>
               <span className="inline-flex items-center text-sm text-primary font-medium gap-1 group-hover:gap-2 transition-all">
-                Learn more <ArrowRight className="w-4 h-4" />
+                Learn about {s.title} <ArrowRight className="w-4 h-4" />
               </span>
             </Link>
           ))}
