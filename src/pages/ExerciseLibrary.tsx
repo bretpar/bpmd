@@ -611,6 +611,15 @@ export const ExerciseSearch = () => {
         title="Search Patient Exercises | Brendan Parker, MD"
         description="Search the patient exercise library for rehabilitation routines by condition, body region, or exercise name. Curated by Dr. Brendan Parker."
         path="/exercise-library/search"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": "Search Patient Exercises",
+          "description": "Search the patient exercise library for rehabilitation routines by condition, body region, or exercise name. Curated by Dr. Brendan Parker.",
+          "author": { "@type": "Person", "name": "Brendan Parker, MD" },
+          "publisher": { "@type": "MedicalBusiness", "name": "Brendan Parker, MD — Sports Medicine" },
+          "url": "https://brendanparkermd.com/exercise-library/search"
+        }}
       />
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
