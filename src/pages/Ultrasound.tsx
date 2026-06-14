@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Layout from "@/components/Layout";
 import ContactCTA from "@/components/ContactCTA";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -222,6 +223,11 @@ const Ultrasound = () => {
   const blocks = useSharedContent();
   return (
     <Layout>
+      <SEO
+        title="Ultrasound-Guided Injections | Brendan Parker, MD"
+        description="Precise, image-guided injections for joint and soft-tissue pain. Learn about ultrasound-guided procedures offered in Edmonds, WA."
+        path="/ultrasound"
+      />
       <Hero />
       <SharedIntro blocks={blocks} />
       <InjectionLibrary />
@@ -307,6 +313,11 @@ export const UltrasoundDetail = () => {
 
   return (
     <Layout>
+      <SEO
+        title={inj.seo_title || `${inj.name} | Ultrasound-Guided Injection`}
+        description={inj.seo_description || inj.short_summary || `Learn about ${inj.name}, an ultrasound-guided injection offered by Dr. Brendan Parker in Edmonds, WA.`}
+        path={`/ultrasound/${inj.slug}`}
+      />
       <section className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground py-12 md:py-16">
         <div className="container mx-auto px-4 lg:px-8">
           <Link to="/ultrasound" className="text-sm opacity-80 hover:opacity-100 inline-flex items-center mb-4">

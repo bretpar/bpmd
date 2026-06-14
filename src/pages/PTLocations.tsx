@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Layout from "@/components/Layout";
 import ContactCTA from "@/components/ContactCTA";
+import SEO from "@/components/SEO";
 import { Search, Phone, MapPin, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +61,11 @@ const PTLocations = () => {
 
   return (
     <Layout>
+      <SEO
+        title="Find a Physical Therapy Clinic Near Edmonds, WA"
+        description="Search trusted physical therapy clinics near Edmonds, WA by region, city, and specialty — referrals from Dr. Brendan Parker's sports medicine practice."
+        path="/pt-locations"
+      />
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-10">
