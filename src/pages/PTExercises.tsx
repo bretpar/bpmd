@@ -61,7 +61,7 @@ const PTExercises = () => {
                                   · {REHAB_PHASE_LABELS[ex.rehab_phase] || ex.rehab_phase}
                                 </span>
                               )}
-                            </h4>
+                            </h2>
                             {ex.description && <p className="text-sm text-muted-foreground">{ex.description}</p>}
                           </div>
                         </div>
