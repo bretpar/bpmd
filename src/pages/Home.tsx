@@ -4,7 +4,6 @@ import { ArrowRight, Compass, Waves, Dumbbell, MapPin, ShieldCheck } from "lucid
 import Layout from "@/components/Layout";
 import ContactCTA from "@/components/ContactCTA";
 import SEO from "@/components/SEO";
-import heroTrack from "@/assets/hero-track.jpg";
 
 const interestCards = [
   { title: "Ultrasound Injections", description: "Guided injection procedures for precision treatment", icon: Waves, link: "/ultrasound" },
