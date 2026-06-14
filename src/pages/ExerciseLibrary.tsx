@@ -374,6 +374,11 @@ export const RegionDetail = () => {
 
   return (
     <Layout>
+      <SEO
+        title={`${displayName} Exercises | Brendan Parker, MD`}
+        description={`General and condition-specific rehabilitation exercises for the ${displayName}. Browse curated routines from Dr. Brendan Parker's sports medicine practice.`}
+        path={`/exercise-library/region/${slug}`}
+      />
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4 lg:px-8 max-w-3xl">
           <Crumbs
@@ -454,6 +459,11 @@ export const RegionGeneralDetail = () => {
 
   return (
     <Layout>
+      <SEO
+        title={`General ${displayName} Exercises | Brendan Parker, MD`}
+        description={`Foundational mobility, stretching, and strengthening exercises for the ${displayName}. Patient-friendly rehabilitation routines from Dr. Brendan Parker.`}
+        path={`/exercise-library/region/${slug}/general`}
+      />
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
           <Crumbs
@@ -503,6 +513,11 @@ export const RegionPathologyDetail = () => {
 
   return (
     <Layout>
+      <SEO
+        title={`${pathologyName} Exercises | Brendan Parker, MD`}
+        description={`Rehabilitation exercises for ${pathologyName} in the ${displayName}. Recovery routines curated by Dr. Brendan Parker for sports medicine patients.`}
+        path={`/exercise-library/region/${slug}/pathology/${pathologySlug}`}
+      />
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
           <Crumbs
@@ -556,6 +571,11 @@ export const ExerciseSearch = () => {
 
   return (
     <Layout>
+      <SEO
+        title="Search Patient Exercises | Brendan Parker, MD"
+        description="Search the patient exercise library for rehabilitation routines by condition, body region, or exercise name. Curated by Dr. Brendan Parker."
+        path="/exercise-library/search"
+      />
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
           <Crumbs
