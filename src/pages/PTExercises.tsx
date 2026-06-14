@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
+import SEO from "@/components/SEO";
 import ContactCTA from "@/components/ContactCTA";
 import { ChevronRight, Activity } from "lucide-react";
 import { useRehabExercises, REHAB_PHASE_LABELS } from "@/hooks/useRehabExercises";
