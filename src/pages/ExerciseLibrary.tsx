@@ -544,6 +544,15 @@ export const RegionPathologyDetail = () => {
         title={`${pathologyName} Exercises | Brendan Parker, MD`}
         description={`Rehabilitation exercises for ${pathologyName} in the ${displayName}. Recovery routines curated by Dr. Brendan Parker for sports medicine patients.`}
         path={`/exercise-library/region/${slug}/pathology/${pathologySlug}`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": `${pathologyName} Exercises`,
+          "description": `Rehabilitation exercises for ${pathologyName} in the ${displayName}. Recovery routines curated by Dr. Brendan Parker for sports medicine patients.`,
+          "author": { "@type": "Person", "name": "Brendan Parker, MD" },
+          "publisher": { "@type": "MedicalBusiness", "name": "Brendan Parker, MD — Sports Medicine" },
+          "url": `https://brendanparkermd.com/exercise-library/region/${slug}/pathology/${pathologySlug}`
+        }}
       />
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
