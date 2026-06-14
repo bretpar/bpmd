@@ -459,6 +459,11 @@ export const RegionGeneralDetail = () => {
 
   return (
     <Layout>
+      <SEO
+        title={`General ${displayName} Exercises | Brendan Parker, MD`}
+        description={`Foundational mobility, stretching, and strengthening exercises for the ${displayName}. Patient-friendly rehabilitation routines from Dr. Brendan Parker.`}
+        path={`/exercise-library/region/${slug}/general`}
+      />
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
           <Crumbs
