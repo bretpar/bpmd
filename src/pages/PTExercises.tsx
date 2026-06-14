@@ -28,6 +28,11 @@ const PTExercises = () => {
 
   return (
     <Layout>
+      <SEO
+        title="Patient Exercise Library | Brendan Parker, MD"
+        description="Structured rehabilitation exercises organized by body region. Browse patient-friendly routines from Dr. Brendan Parker's sports medicine practice."
+        path="/pt-exercises"
+      />
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-12">
