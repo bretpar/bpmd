@@ -571,6 +571,11 @@ export const ExerciseSearch = () => {
 
   return (
     <Layout>
+      <SEO
+        title="Search Patient Exercises | Brendan Parker, MD"
+        description="Search the patient exercise library for rehabilitation routines by condition, body region, or exercise name. Curated by Dr. Brendan Parker."
+        path="/exercise-library/search"
+      />
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
           <Crumbs
