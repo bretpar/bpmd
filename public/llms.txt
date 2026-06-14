@@ -1,0 +1,22 @@
+# Brendan Parker MD
+
+> Orthopedic physician assistant based in Edmonds, Washington, specializing in physical therapy, ultrasound-guided injections, and orthopedic care.
+
+Dr. Brendan Parker is a physician assistant providing orthopedic care in Edmonds, WA. This site serves as a resource for patients and referring providers, offering information on clinical services, an interactive exercise library organized by body region and pathology, ultrasound-guided injection details, and clinic contact information.
+
+## Pages
+
+- [Home](/): Overview of clinical services and patient resources.
+- [About](/about): Background, credentials, and clinical philosophy.
+- [Services](/services): Orthopedic and physical therapy services offered.
+- [Contact](/contact): Clinic location, contact form, and appointment details.
+- [PT Locations](/pt-locations): Directory of physical therapy clinic locations.
+
+## Resources
+
+- [Exercise Library](/exercise-library): Browse physical therapy exercises by body region and specific pathologies.
+- [Exercise Search](/exercise-library/search): Search the full exercise library by keyword.
+- [Shoulder Region](/exercise-library/region/shoulder): Exercises and guidance for shoulder conditions.
+- [Shoulder Pathologies](/exercise-library/region/shoulder/pathology/rotator-cuff-tendinopathy): Condition-specific shoulder exercises (e.g., rotator cuff tendinopathy).
+- [Ultrasound-Guided Injections](/ultrasound): Overview of ultrasound-guided joint and soft-tissue injections.
+- [Knee Joint Injection](/ultrasound/knee-joint-injection): Details on the knee joint injection procedure.
