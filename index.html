@@ -22,18 +22,43 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "Physician",
-        "name": "Brendan Parker, MD",
-        "medicalSpecialty": "Sports Medicine",
-        "url": "https://brendanparkermd.com/",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "21401 72nd Ave W",
-          "addressLocality": "Edmonds",
-          "addressRegion": "WA",
-          "postalCode": "98026",
-          "addressCountry": "US"
-        }
+        "@graph": [
+          {
+            "@type": ["Physician", "Person"],
+            "@id": "https://brendanparkermd.com/#person",
+            "name": "Brendan Parker, MD",
+            "jobTitle": "Sports Medicine Physician",
+            "description": "Board-certified non-operative sports medicine physician in Edmonds, WA. Evidence-based care for athletes and active patients.",
+            "url": "https://brendanparkermd.com/",
+            "sameAs": [],
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "21401 72nd Ave W",
+              "addressLocality": "Edmonds",
+              "addressRegion": "WA",
+              "postalCode": "98026",
+              "addressCountry": "US"
+            },
+            "telephone": "+1-425-339-5447"
+          },
+          {
+            "@type": "MedicalBusiness",
+            "@id": "https://brendanparkermd.com/#business",
+            "name": "Brendan Parker, MD — Sports Medicine",
+            "description": "Non-operative sports medicine practice specializing in musculoskeletal care, ultrasound-guided injections, and rehabilitation in Edmonds, WA.",
+            "url": "https://brendanparkermd.com/",
+            "telephone": "+1-425-339-5447",
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "21401 72nd Ave W",
+              "addressLocality": "Edmonds",
+              "addressRegion": "WA",
+              "postalCode": "98026",
+              "addressCountry": "US"
+            },
+            "founder": { "@id": "https://brendanparkermd.com/#person" }
+          }
+        ]
       }
     </script>
   </head>
