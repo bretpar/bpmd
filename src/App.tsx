@@ -24,6 +24,7 @@ import Admin from "./pages/Admin";
 import ExerciseLibraryAdmin from "./pages/ExerciseLibraryAdmin";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
+import Analytics from "./components/Analytics";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ScrollToTop />
+          <Analytics />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
