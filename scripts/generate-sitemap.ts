@@ -26,6 +26,10 @@ async function supabaseSelect(table: string, query: string): Promise<any[]> {
   return res.json();
 }
 
+// Routes intentionally excluded from the sitemap:
+// - /resources, /orthopedic-resources, /rehab_exercises, /injuries, /injuries/:slug
+//   → legacy redirects (<Navigate>) to canonical pages; not indexable destinations.
+// - /ultrasound-admin, /admin, /exercise-library-admin, /auth → private/admin routes.
 async function generateEntries(): Promise<SitemapEntry[]> {
   const entries: SitemapEntry[] = [
     { path: "/", changefreq: "weekly", priority: "1.0" },
