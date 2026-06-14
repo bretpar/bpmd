@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Layout from "@/components/Layout";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,6 +37,11 @@ const Contact = () => {
 
   return (
     <Layout>
+      <SEO
+        title="Contact | Brendan Parker, MD Sports Medicine in Edmonds"
+        description="Contact Dr. Brendan Parker's sports medicine office in Edmonds, WA. Request an appointment, ask a question, or find directions to the clinic."
+        path="/contact"
+      />
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-12">

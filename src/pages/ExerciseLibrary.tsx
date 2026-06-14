@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
+import SEO from "@/components/SEO";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -304,6 +305,11 @@ export const ExerciseLibraryHome = () => {
 
   return (
     <Layout>
+      <SEO
+        title="Patient Exercise Library | Brendan Parker, MD"
+        description="Browse patient-friendly rehabilitation exercises organized by body region and condition. Curated by Dr. Brendan Parker for sports medicine recovery."
+        path="/exercise-library"
+      />
       <section className="py-10 md:py-16">
         <div className="container mx-auto px-4 lg:px-8 max-w-3xl">
           <div className="text-center mb-8">

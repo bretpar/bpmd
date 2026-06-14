@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Compass, Waves, Dumbbell, MapPin, ShieldCheck } from "lucide-react";
 import Layout from "@/components/Layout";
 import ContactCTA from "@/components/ContactCTA";
+import SEO from "@/components/SEO";
 import heroTrack from "@/assets/hero-track.jpg";
 
 const interestCards = [
@@ -14,6 +15,11 @@ const interestCards = [
 
 const Home = () => (
   <Layout>
+    <SEO
+      title="Brendan Parker, MD | Non-Operative Sports Medicine"
+      description="Edmonds, WA sports medicine physician. Non-surgical care for joint pain, injuries, and active lifestyles — get back to what you love."
+      path="/"
+    />
     {/* Hero */}
     <section className="relative overflow-hidden min-h-[78vh] md:min-h-[85vh] flex items-center">
       <div className="absolute inset-0">
