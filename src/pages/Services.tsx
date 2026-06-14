@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import ContactCTA from "@/components/ContactCTA";
+import SEO from "@/components/SEO";
 import { Compass, Waves, Dumbbell, MapPin, ArrowRight, ExternalLink, BookOpen } from "lucide-react";
 
 const services = [
@@ -12,6 +13,11 @@ const services = [
 
 const Services = () => (
   <Layout>
+    <SEO
+      title="Services | Brendan Parker, MD Sports Medicine"
+      description="Non-operative sports medicine services in Edmonds, WA: consultations, ultrasound-guided injections, patient exercises, and physical therapy referrals."
+      path="/services"
+    />
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="max-w-3xl mx-auto text-center mb-12">

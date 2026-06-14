@@ -1,5 +1,6 @@
 import Layout from "@/components/Layout";
 import ContactCTA from "@/components/ContactCTA";
+import SEO from "@/components/SEO";
 import { GraduationCap, Stethoscope, Heart, Award } from "lucide-react";
 
 const highlights = [
@@ -11,6 +12,11 @@ const highlights = [
 
 const About = () => (
   <Layout>
+    <SEO
+      title="About Dr. Brendan Parker | Sports Medicine Physician"
+      description="Meet Dr. Brendan Parker, a non-operative sports medicine physician in Edmonds, WA helping athletes and active patients recover and return to activity."
+      path="/about"
+    />
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="max-w-3xl mx-auto">
