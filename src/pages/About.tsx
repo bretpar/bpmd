@@ -16,6 +16,16 @@ const About = () => (
       title="About Dr. Brendan Parker | Sports Medicine Physician"
       description="Meet Dr. Brendan Parker, a non-operative sports medicine physician in Edmonds, WA helping athletes and active patients recover and return to activity."
       path="/about"
+      jsonLd={{
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Brendan Parker, MD",
+        "jobTitle": "Sports Medicine Physician",
+        "description": "Board-certified non-operative sports medicine physician helping athletes and active patients recover and return to activity.",
+        "url": "https://brendanparkermd.com/about",
+        "sameAs": [],
+        "knowsAbout": ["Sports Medicine", "Non-Operative Orthopedics", "Musculoskeletal Care"]
+      }}
     />
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4 lg:px-8">
