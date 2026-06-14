@@ -23,11 +23,12 @@ const Home = () => (
     <section className="relative overflow-hidden min-h-[78vh] md:min-h-[85vh] flex items-center">
       <div className="absolute inset-0">
         <img
-          src={heroTrack}
+          src="/hero-track.jpg"
           alt="Modern running track lanes representing active sports medicine care"
           className="w-full h-full object-cover object-center"
           width={1920}
           height={1080}
+          fetchPriority="high"
         />
         {/* Layered overlays for strong text contrast, weighted to the left */}
         <div className="absolute inset-0 bg-gradient-to-r from-[hsl(213,75%,10%)]/95 via-[hsl(213,72%,14%)]/85 sm:via-[hsl(213,72%,14%)]/75 to-[hsl(213,72%,18%)]/55" />
