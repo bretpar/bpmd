@@ -45,7 +45,7 @@ const Footer = () => (
         </div>
       </div>
 
-      <div className="border-t border-primary-foreground/10 mt-10 pt-6 text-center text-sm text-primary-foreground/50">
+      <div className="border-t border-primary-foreground/20 mt-10 pt-6 text-center text-sm text-primary-foreground/80">
         © {new Date().getFullYear()} Brendan Parker, MD. All rights reserved.
       </div>
     </div>
