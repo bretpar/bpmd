@@ -54,7 +54,7 @@ const PTExercises = () => {
                         <div key={ex.id} className="flex items-start gap-3">
                           <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
                           <div>
-                            <h4 className="font-medium text-foreground">
+                            <h2 className="font-medium text-foreground">
                               {ex.name}
                               {ex.rehab_phase && (
                                 <span className="ml-2 text-xs font-normal text-muted-foreground">

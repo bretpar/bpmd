@@ -42,7 +42,7 @@ const About = () => (
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 mx-auto">
                 <h.icon className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="font-semibold text-foreground mb-2">{h.title}</h3>
+              <h2 className="font-semibold text-foreground mb-2">{h.title}</h2>
               <p className="text-sm text-muted-foreground">{h.text}</p>
             </div>
           ))}
