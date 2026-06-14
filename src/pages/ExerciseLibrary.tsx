@@ -481,6 +481,15 @@ export const RegionGeneralDetail = () => {
         title={`General ${displayName} Exercises | Brendan Parker, MD`}
         description={`Foundational mobility, stretching, and strengthening exercises for the ${displayName}. Patient-friendly rehabilitation routines from Dr. Brendan Parker.`}
         path={`/exercise-library/region/${slug}/general`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": `General ${displayName} Exercises`,
+          "description": `Foundational mobility, stretching, and strengthening exercises for the ${displayName}. Patient-friendly rehabilitation routines from Dr. Brendan Parker.`,
+          "author": { "@type": "Person", "name": "Brendan Parker, MD" },
+          "publisher": { "@type": "MedicalBusiness", "name": "Brendan Parker, MD — Sports Medicine" },
+          "url": `https://brendanparkermd.com/exercise-library/region/${slug}/general`
+        }}
       />
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
