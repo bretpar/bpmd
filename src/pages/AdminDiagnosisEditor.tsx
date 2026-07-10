@@ -526,7 +526,10 @@ const Inner = () => {
                 onCheckedChange={(v) => setPathology({ ...pathology, is_active: v })} />
               <Label>Active</Label>
             </div>
-            <div><Button onClick={saveInfo}>Save diagnosis info</Button></div>
+            <div className="flex items-center gap-3">
+              <Button onClick={saveInfo} disabled={!dirty}>Save diagnosis info</Button>
+              {dirty && <span className="text-xs text-amber-700">Unsaved changes</span>}
+            </div>
           </AccordionContent>
         </AccordionItem>
 
