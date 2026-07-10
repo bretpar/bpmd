@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Layout from "@/components/Layout";
 import RequireAdmin from "@/components/RequireAdmin";
@@ -236,6 +236,7 @@ const Inner = () => {
   const nav = useNavigate();
 
   const [pathology, setPathology] = useState<Pathology | null>(null);
+  const [savedPathology, setSavedPathology] = useState<Pathology | null>(null);
   const [region, setRegion] = useState<string>("");
   const [phases, setPhases] = useState<PhaseRow[]>([]);
   const [allRehab, setAllRehab] = useState<RehabEx[]>([]);
@@ -243,6 +244,32 @@ const Inner = () => {
   const [loading, setLoading] = useState(true);
   const [addingPhaseId, setAddingPhaseId] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  const dirty = useMemo(
+    () => !!pathology && !!savedPathology &&
+      JSON.stringify(pathology) !== JSON.stringify(savedPathology),
+    [pathology, savedPathology],
+  );
+  const dirtyRef = useRef(false);
+  const localPathologyRef = useRef<Pathology | null>(null);
+  useEffect(() => { dirtyRef.current = dirty; }, [dirty]);
+  useEffect(() => { localPathologyRef.current = pathology; }, [pathology]);
+
+  // Warn on tab close / refresh
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!dirtyRef.current) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
+
+  const confirmLeave = () =>
+    !dirtyRef.current ||
+    window.confirm("You have unsaved changes to the diagnosis info. Leave without saving?");
+
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -258,7 +285,20 @@ const Inner = () => {
       sb.from("rehab_exercises").select("id, title, short_description, rehab_phase, image_url").eq("is_active", true).order("title"),
       sb.from("rehab_exercise_pathologies").select("exercise_id").eq("pathology_id", id),
     ]);
-    setPathology(p);
+    // Preserve unsaved edits to Diagnosis Information if the user is mid-edit
+    // (other panels refresh() after their own auto-saves).
+    const local = localPathologyRef.current;
+    if (dirtyRef.current && local && p && local.id === p.id) {
+      // Merge server-side fields we don't edit here, keep local edits for the form fields.
+      setPathology({
+        ...local,
+        exercise_program_id: p.exercise_program_id,
+        body_location_id: p.body_location_id,
+      });
+    } else {
+      setPathology(p);
+    }
+    setSavedPathology(p);
     setAllRehab(rex || []);
     setAssignedIds((links || []).map((l: any) => l.exercise_id));
 
@@ -298,14 +338,18 @@ const Inner = () => {
   /* --- Pathology info --- */
   const saveInfo = async () => {
     if (!pathology) return;
-    const { error } = await sb.from("pathologies").update({
+    const patch = {
       name: pathology.name.trim(),
       slug: pathology.slug?.trim() || slugify(pathology.name),
       short_description: pathology.short_description || null,
       full_description: pathology.full_description || null,
       is_active: pathology.is_active,
-    }).eq("id", pathology.id);
+    };
+    const { error } = await sb.from("pathologies").update(patch).eq("id", pathology.id);
     if (error) return toast({ title: "Failed", description: error.message, variant: "destructive" });
+    const next = { ...pathology, ...patch };
+    setPathology(next);
+    setSavedPathology(next);
     toast({ title: "Diagnosis saved" });
   };
 
@@ -408,19 +452,32 @@ const Inner = () => {
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 space-y-4">
-      <div className="flex items-center justify-between">
-        <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          to="/admin"
+          onClick={(e) => { if (!confirmLeave()) e.preventDefault(); }}
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
+        >
           <ArrowLeft className="w-4 h-4" /> Admin
         </Link>
-        <Button asChild variant="outline" size="sm">
-          <Link
-            to={`/exercise-library/region/${slugify(region || "")}/pathology/${pathology.slug}`}
-            target="_blank"
-          >
-            <ExternalLink className="w-4 h-4 mr-1" />Open patient page
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          {dirty && (
+            <span className="text-xs font-medium text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-2 py-0.5">
+              Unsaved changes
+            </span>
+          )}
+          <Button asChild variant="outline" size="sm">
+            <Link
+              to={`/exercise-library/region/${slugify(region || "")}/pathology/${pathology.slug}`}
+              target="_blank"
+              onClick={(e) => { if (!confirmLeave()) e.preventDefault(); }}
+            >
+              <ExternalLink className="w-4 h-4 mr-1" />Open patient page
+            </Link>
+          </Button>
+        </div>
       </div>
+
 
       <div>
         <p className="text-xs uppercase tracking-wide text-primary font-medium mb-1">Diagnosis</p>
@@ -432,11 +489,19 @@ const Inner = () => {
         {/* ---------- 1. Diagnosis Information ---------- */}
         <AccordionItem value="info" className="border rounded-xl bg-card px-4">
           <AccordionTrigger className="hover:no-underline py-4">
-            <div className="text-left">
-              <div className="font-semibold">1. Diagnosis Information</div>
-              <div className="text-xs text-muted-foreground">Name, description, and visibility</div>
+            <div className="text-left flex items-center gap-2">
+              <div>
+                <div className="font-semibold">1. Diagnosis Information</div>
+                <div className="text-xs text-muted-foreground">Name, description, and visibility</div>
+              </div>
+              {dirty && (
+                <span className="text-[10px] font-medium text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-2 py-0.5">
+                  Unsaved
+                </span>
+              )}
             </div>
           </AccordionTrigger>
+
           <AccordionContent className="pb-5 space-y-3">
             <div className="grid sm:grid-cols-2 gap-3">
               <div><Label>Name</Label>
@@ -461,7 +526,10 @@ const Inner = () => {
                 onCheckedChange={(v) => setPathology({ ...pathology, is_active: v })} />
               <Label>Active</Label>
             </div>
-            <div><Button onClick={saveInfo}>Save diagnosis info</Button></div>
+            <div className="flex items-center gap-3">
+              <Button onClick={saveInfo} disabled={!dirty}>Save diagnosis info</Button>
+              {dirty && <span className="text-xs text-amber-700">Unsaved changes</span>}
+            </div>
           </AccordionContent>
         </AccordionItem>
 
