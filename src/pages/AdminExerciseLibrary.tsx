@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Copy, Search, ExternalLink, ArrowLeft } from "lucide-react";
 import {
-  EXERCISE_CATEGORIES, DIFFICULTIES, slugify,
+  EXERCISE_CATEGORIES, DIFFICULTIES, slugify, readiness, READINESS_LABEL,
   type LibraryExercise, type Status,
 } from "@/lib/programTypes";
 
