@@ -498,6 +498,21 @@ const InjuriesAdmin = () => {
                   placeholder="Search joints..."
                 />
               </Field>
+              <Field label="Attached Exercise Program (optional)">
+                <Select
+                  value={editing.exercise_program_id ?? "none"}
+                  onValueChange={(v) => setEditing({ ...editing, exercise_program_id: v === "none" ? null : v })}
+                >
+                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— None —</SelectItem>
+                    {programs.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name} {p.status === "draft" ? "(draft)" : ""}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+
               <div className="grid sm:grid-cols-2 gap-4">
                 <Field label="Sort order">
                   <Input type="number" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} />
