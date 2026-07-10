@@ -354,9 +354,11 @@ const InjuriesAdmin = () => {
         is_active: p.is_active ?? true,
         sort_order: p.sort_order ?? 0,
         joint_ids: jointMap[p.id] || [],
+        exercise_program_id: p.exercise_program_id ?? null,
       }))
     );
     setJoints(jData || []);
+
     const ec: Record<string, number> = {};
     (exLinks || []).forEach((r: any) => {
       ec[r.pathology_id] = (ec[r.pathology_id] || 0) + 1;
