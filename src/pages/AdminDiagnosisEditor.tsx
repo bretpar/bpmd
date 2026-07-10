@@ -236,6 +236,7 @@ const Inner = () => {
   const nav = useNavigate();
 
   const [pathology, setPathology] = useState<Pathology | null>(null);
+  const [savedPathology, setSavedPathology] = useState<Pathology | null>(null);
   const [region, setRegion] = useState<string>("");
   const [phases, setPhases] = useState<PhaseRow[]>([]);
   const [allRehab, setAllRehab] = useState<RehabEx[]>([]);
@@ -243,6 +244,32 @@ const Inner = () => {
   const [loading, setLoading] = useState(true);
   const [addingPhaseId, setAddingPhaseId] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  const dirty = useMemo(
+    () => !!pathology && !!savedPathology &&
+      JSON.stringify(pathology) !== JSON.stringify(savedPathology),
+    [pathology, savedPathology],
+  );
+  const dirtyRef = useRef(false);
+  const localPathologyRef = useRef<Pathology | null>(null);
+  useEffect(() => { dirtyRef.current = dirty; }, [dirty]);
+  useEffect(() => { localPathologyRef.current = pathology; }, [pathology]);
+
+  // Warn on tab close / refresh
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!dirtyRef.current) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
+
+  const confirmLeave = () =>
+    !dirtyRef.current ||
+    window.confirm("You have unsaved changes to the diagnosis info. Leave without saving?");
+
 
   const sensors = useSensors(
     useSensor(PointerSensor),
