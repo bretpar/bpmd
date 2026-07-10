@@ -96,36 +96,43 @@ const SortableRow = ({
   const ex = pe.exercise_library;
   return (
     <div ref={setNodeRef} style={style} className="flex items-start gap-2 p-3 rounded-md border border-border bg-background">
-      <button className="cursor-grab pt-1 text-muted-foreground" {...attributes} {...listeners}>
-        <GripVertical className="w-4 h-4" />
+      <button
+        className="cursor-grab touch-none text-muted-foreground flex items-center justify-center h-10 w-8 -ml-1 shrink-0"
+        aria-label="Drag to reorder"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="w-5 h-5" />
       </button>
       <div className="flex-1 min-w-0 space-y-2">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-sm">{ex?.name || "(missing exercise)"}</span>
           <span className="text-xs text-muted-foreground">{prescription(pe, ex ?? undefined)}</span>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <div>
             <Label className="text-xs">Sets</Label>
-            <Input type="number" className="h-8" value={pe.override_sets ?? ""}
+            <Input type="number" inputMode="numeric" className="h-10 sm:h-9" value={pe.override_sets ?? ""}
               placeholder={ex?.default_sets?.toString() ?? "-"}
               onChange={(e) => onChange({ override_sets: e.target.value ? Number(e.target.value) : null })} />
           </div>
           <div>
             <Label className="text-xs">Reps</Label>
-            <Input type="number" className="h-8" value={pe.override_reps ?? ""}
+            <Input type="number" inputMode="numeric" className="h-10 sm:h-9" value={pe.override_reps ?? ""}
               placeholder={ex?.default_reps?.toString() ?? "-"}
               onChange={(e) => onChange({ override_reps: e.target.value ? Number(e.target.value) : null })} />
           </div>
           <div>
             <Label className="text-xs">Hold (s)</Label>
-            <Input type="number" className="h-8" value={pe.override_hold_seconds ?? ""}
+            <Input type="number" inputMode="numeric" className="h-10 sm:h-9" value={pe.override_hold_seconds ?? ""}
               placeholder={ex?.default_hold_seconds?.toString() ?? "-"}
               onChange={(e) => onChange({ override_hold_seconds: e.target.value ? Number(e.target.value) : null })} />
           </div>
         </div>
       </div>
-      <Button size="icon" variant="ghost" onClick={onRemove} aria-label="Remove"><Trash2 className="w-4 h-4" /></Button>
+      <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" onClick={onRemove} aria-label="Remove">
+        <Trash2 className="w-5 h-5" />
+      </Button>
     </div>
   );
 };
