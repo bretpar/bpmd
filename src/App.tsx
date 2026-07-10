@@ -25,6 +25,8 @@ import ExerciseLibraryAdmin from "./pages/ExerciseLibraryAdmin";
 import AdminExerciseLibrary from "./pages/AdminExerciseLibrary";
 import AdminPrograms from "./pages/AdminPrograms";
 import AdminProgramBuilder from "./pages/AdminProgramBuilder";
+import AdminProgramWizard from "./pages/AdminProgramWizard";
+import AdminProgramTemplates from "./pages/AdminProgramTemplates";
 import ProgramView, { ProgramWorkout } from "./pages/ProgramView";
 import NotFound from "./pages/NotFound";
 
