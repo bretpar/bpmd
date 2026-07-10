@@ -327,6 +327,10 @@ export const ProgramWorkout = () => {
             </div>
           </div>
 
+          <div className="mb-4">
+            <PhaseGuidance goal={phase.goal} criteria={phase.progression_criteria} warning={phase.warning_text} compact />
+          </div>
+
           <PainSafetyPanel
             acceptable={p.acceptable_discomfort}
             reduce={p.reduce_or_stop}
