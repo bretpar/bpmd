@@ -69,8 +69,11 @@ const App = () => (
             <Route path="/exercise-library-admin" element={<ExerciseLibraryAdmin />} />
             <Route path="/admin/exercise-library" element={<AdminExerciseLibrary />} />
             <Route path="/admin/programs" element={<AdminPrograms />} />
+            <Route path="/admin/programs/new" element={<AdminProgramWizard />} />
+            <Route path="/admin/programs/templates" element={<AdminProgramTemplates />} />
             <Route path="/admin/programs/:id" element={<AdminProgramBuilder />} />
             <Route path="/programs/:slug" element={<ProgramView />} />
+            <Route path="/programs/:slug/workout" element={<ProgramWorkout />} />
             <Route path="/programs/:slug/workout" element={<ProgramWorkout />} />
             <Route path="*" element={<NotFound />} />
 
