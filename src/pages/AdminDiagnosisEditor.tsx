@@ -489,11 +489,19 @@ const Inner = () => {
         {/* ---------- 1. Diagnosis Information ---------- */}
         <AccordionItem value="info" className="border rounded-xl bg-card px-4">
           <AccordionTrigger className="hover:no-underline py-4">
-            <div className="text-left">
-              <div className="font-semibold">1. Diagnosis Information</div>
-              <div className="text-xs text-muted-foreground">Name, description, and visibility</div>
+            <div className="text-left flex items-center gap-2">
+              <div>
+                <div className="font-semibold">1. Diagnosis Information</div>
+                <div className="text-xs text-muted-foreground">Name, description, and visibility</div>
+              </div>
+              {dirty && (
+                <span className="text-[10px] font-medium text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-2 py-0.5">
+                  Unsaved
+                </span>
+              )}
             </div>
           </AccordionTrigger>
+
           <AccordionContent className="pb-5 space-y-3">
             <div className="grid sm:grid-cols-2 gap-3">
               <div><Label>Name</Label>
