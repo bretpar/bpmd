@@ -640,7 +640,7 @@ const Inner = () => {
                       </SortableContext>
                     </DndContext>
 
-                    <Button size="sm" variant="outline" onClick={() => setAddingPhaseId(ph.id)}>
+                    <Button size="sm" variant="outline" className="h-10 w-full sm:w-auto" onClick={() => setAddingPhaseId(ph.id)}>
                       <Plus className="w-4 h-4 mr-1" />Add exercise from library
                     </Button>
                   </AccordionContent>
@@ -648,7 +648,7 @@ const Inner = () => {
               ))}
             </Accordion>
 
-            <Button size="sm" onClick={addPhase}>
+            <Button size="sm" className="h-10 w-full sm:w-auto" onClick={addPhase}>
               <Plus className="w-4 h-4 mr-1" />Add phase
             </Button>
           </AccordionContent>
