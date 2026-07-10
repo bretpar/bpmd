@@ -764,20 +764,19 @@ export const RegionPathologyDetail = () => {
             {pathologyName}
           </h1>
 
-          {/* ---------- Recommended Recovery Program ---------- */}
+          {/* ---------- Start Here ---------- */}
           {program && program.program_phases.length > 0 && (
             <div className="mb-10 rounded-xl border border-border bg-card overflow-hidden">
               <div className="p-5 md:p-6 border-b border-border bg-muted/30">
                 <div className="flex items-center gap-2 mb-1">
                   <ListOrdered className="w-4 h-4 text-primary" />
                   <p className="text-xs uppercase tracking-wide text-primary font-medium">
-                    Recommended Recovery Program
+                    Start Here
                   </p>
                 </div>
                 <h2 className="text-xl md:text-2xl font-semibold text-foreground">{program.name}</h2>
                 <p className="text-sm text-muted-foreground mt-1.5">
-                  These exercises are presented in the order patients typically progress through rehabilitation.
-                  Expand any phase to see the exercises in detail.
+                  Start with these exercises. They are organized in the order patients typically progress through rehabilitation.
                 </p>
               </div>
 
@@ -789,16 +788,15 @@ export const RegionPathologyDetail = () => {
                         <div className="font-semibold text-foreground">
                           Phase {idx + 1} – {ph.title}
                         </div>
-                        {ph.phase_exercises.length > 0 && (
-                          <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                            {ph.phase_exercises
-                              .map((pe) => pe.exercise_library?.name)
-                              .filter(Boolean)
-                              .join(" · ")}
-                          </div>
+                        {ph.goal && (
+                          <div className="text-sm text-muted-foreground mt-0.5 line-clamp-1">{ph.goal}</div>
                         )}
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {ph.phase_exercises.length} exercise{ph.phase_exercises.length === 1 ? "" : "s"}
+                        </div>
                       </div>
                     </AccordionTrigger>
+
                     <AccordionContent>
                       {ph.goal && (
                         <p className="text-sm text-muted-foreground mb-4 px-1">{ph.goal}</p>
