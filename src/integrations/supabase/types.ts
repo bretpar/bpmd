@@ -47,6 +47,117 @@ export type Database = {
         }
         Relationships: []
       }
+      exercise_library: {
+        Row: {
+          body_region: string | null
+          category: Database["public"]["Enums"]["exercise_category"] | null
+          common_mistakes: string | null
+          created_at: string
+          default_frequency: string | null
+          default_hold_seconds: number | null
+          default_reps: number | null
+          default_sets: number | null
+          difficulty: Database["public"]["Enums"]["exercise_difficulty"] | null
+          equipment: string | null
+          id: string
+          image_url: string | null
+          instructions: string | null
+          name: string
+          safety_notes: string | null
+          short_description: string | null
+          slug: string
+          status: Database["public"]["Enums"]["content_status"]
+          updated_at: string
+          video_url: string | null
+          what_to_feel: string | null
+        }
+        Insert: {
+          body_region?: string | null
+          category?: Database["public"]["Enums"]["exercise_category"] | null
+          common_mistakes?: string | null
+          created_at?: string
+          default_frequency?: string | null
+          default_hold_seconds?: number | null
+          default_reps?: number | null
+          default_sets?: number | null
+          difficulty?: Database["public"]["Enums"]["exercise_difficulty"] | null
+          equipment?: string | null
+          id?: string
+          image_url?: string | null
+          instructions?: string | null
+          name: string
+          safety_notes?: string | null
+          short_description?: string | null
+          slug: string
+          status?: Database["public"]["Enums"]["content_status"]
+          updated_at?: string
+          video_url?: string | null
+          what_to_feel?: string | null
+        }
+        Update: {
+          body_region?: string | null
+          category?: Database["public"]["Enums"]["exercise_category"] | null
+          common_mistakes?: string | null
+          created_at?: string
+          default_frequency?: string | null
+          default_hold_seconds?: number | null
+          default_reps?: number | null
+          default_sets?: number | null
+          difficulty?: Database["public"]["Enums"]["exercise_difficulty"] | null
+          equipment?: string | null
+          id?: string
+          image_url?: string | null
+          instructions?: string | null
+          name?: string
+          safety_notes?: string | null
+          short_description?: string | null
+          slug?: string
+          status?: Database["public"]["Enums"]["content_status"]
+          updated_at?: string
+          video_url?: string | null
+          what_to_feel?: string | null
+        }
+        Relationships: []
+      }
+      exercise_programs: {
+        Row: {
+          body_region: string | null
+          condition: string | null
+          created_at: string
+          estimated_duration: string | null
+          id: string
+          intro_text: string | null
+          name: string
+          slug: string
+          status: Database["public"]["Enums"]["content_status"]
+          updated_at: string
+        }
+        Insert: {
+          body_region?: string | null
+          condition?: string | null
+          created_at?: string
+          estimated_duration?: string | null
+          id?: string
+          intro_text?: string | null
+          name: string
+          slug: string
+          status?: Database["public"]["Enums"]["content_status"]
+          updated_at?: string
+        }
+        Update: {
+          body_region?: string | null
+          condition?: string | null
+          created_at?: string
+          estimated_duration?: string | null
+          id?: string
+          intro_text?: string | null
+          name?: string
+          slug?: string
+          status?: Database["public"]["Enums"]["content_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       exercises: {
         Row: {
           body_region: string | null
@@ -216,6 +327,7 @@ export type Database = {
         Row: {
           body_location_id: string | null
           created_at: string
+          exercise_program_id: string | null
           full_description: string | null
           id: string
           is_active: boolean
@@ -228,6 +340,7 @@ export type Database = {
         Insert: {
           body_location_id?: string | null
           created_at?: string
+          exercise_program_id?: string | null
           full_description?: string | null
           id?: string
           is_active?: boolean
@@ -240,6 +353,7 @@ export type Database = {
         Update: {
           body_location_id?: string | null
           created_at?: string
+          exercise_program_id?: string | null
           full_description?: string | null
           id?: string
           is_active?: boolean
@@ -255,6 +369,13 @@ export type Database = {
             columns: ["body_location_id"]
             isOneToOne: false
             referencedRelation: "body_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathologies_exercise_program_id_fkey"
+            columns: ["exercise_program_id"]
+            isOneToOne: false
+            referencedRelation: "exercise_programs"
             referencedColumns: ["id"]
           },
         ]
@@ -285,6 +406,116 @@ export type Database = {
             columns: ["pathology_id"]
             isOneToOne: false
             referencedRelation: "pathologies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      phase_exercises: {
+        Row: {
+          created_at: string
+          exercise_id: string
+          id: string
+          is_required: boolean
+          override_duration: string | null
+          override_frequency: string | null
+          override_hold_seconds: number | null
+          override_reps: number | null
+          override_sets: number | null
+          phase_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          exercise_id: string
+          id?: string
+          is_required?: boolean
+          override_duration?: string | null
+          override_frequency?: string | null
+          override_hold_seconds?: number | null
+          override_reps?: number | null
+          override_sets?: number | null
+          phase_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          exercise_id?: string
+          id?: string
+          is_required?: boolean
+          override_duration?: string | null
+          override_frequency?: string | null
+          override_hold_seconds?: number | null
+          override_reps?: number | null
+          override_sets?: number | null
+          phase_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phase_exercises_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercise_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phase_exercises_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "program_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      program_phases: {
+        Row: {
+          approximate_duration: string | null
+          created_at: string
+          estimated_workout_minutes: number | null
+          frequency: string | null
+          goal: string | null
+          id: string
+          program_id: string
+          progression_criteria: string | null
+          sort_order: number
+          title: string
+          updated_at: string
+          warning_text: string | null
+        }
+        Insert: {
+          approximate_duration?: string | null
+          created_at?: string
+          estimated_workout_minutes?: number | null
+          frequency?: string | null
+          goal?: string | null
+          id?: string
+          program_id: string
+          progression_criteria?: string | null
+          sort_order?: number
+          title: string
+          updated_at?: string
+          warning_text?: string | null
+        }
+        Update: {
+          approximate_duration?: string | null
+          created_at?: string
+          estimated_workout_minutes?: number | null
+          frequency?: string | null
+          goal?: string | null
+          id?: string
+          program_id?: string
+          progression_criteria?: string | null
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          warning_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_phases_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "exercise_programs"
             referencedColumns: ["id"]
           },
         ]
@@ -598,6 +829,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      content_status: "draft" | "published"
+      exercise_category:
+        | "mobility"
+        | "stretching"
+        | "strength"
+        | "stability"
+        | "balance"
+        | "return_to_sport"
+      exercise_difficulty: "beginner" | "intermediate" | "advanced"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -726,6 +966,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      content_status: ["draft", "published"],
+      exercise_category: [
+        "mobility",
+        "stretching",
+        "strength",
+        "stability",
+        "balance",
+        "return_to_sport",
+      ],
+      exercise_difficulty: ["beginner", "intermediate", "advanced"],
     },
   },
 } as const
