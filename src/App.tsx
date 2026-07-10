@@ -25,6 +25,8 @@ import ExerciseLibraryAdmin from "./pages/ExerciseLibraryAdmin";
 import AdminExerciseLibrary from "./pages/AdminExerciseLibrary";
 import AdminPrograms from "./pages/AdminPrograms";
 import AdminProgramBuilder from "./pages/AdminProgramBuilder";
+import AdminProgramWizard from "./pages/AdminProgramWizard";
+import AdminProgramTemplates from "./pages/AdminProgramTemplates";
 import ProgramView, { ProgramWorkout } from "./pages/ProgramView";
 import NotFound from "./pages/NotFound";
 
@@ -67,6 +69,8 @@ const App = () => (
             <Route path="/exercise-library-admin" element={<ExerciseLibraryAdmin />} />
             <Route path="/admin/exercise-library" element={<AdminExerciseLibrary />} />
             <Route path="/admin/programs" element={<AdminPrograms />} />
+            <Route path="/admin/programs/new" element={<AdminProgramWizard />} />
+            <Route path="/admin/programs/templates" element={<AdminProgramTemplates />} />
             <Route path="/admin/programs/:id" element={<AdminProgramBuilder />} />
             <Route path="/programs/:slug" element={<ProgramView />} />
             <Route path="/programs/:slug/workout" element={<ProgramWorkout />} />

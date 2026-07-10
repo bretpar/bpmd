@@ -121,6 +121,7 @@ export type Database = {
       }
       exercise_programs: {
         Row: {
+          acceptable_discomfort: string | null
           body_region: string | null
           condition: string | null
           created_at: string
@@ -128,11 +129,14 @@ export type Database = {
           id: string
           intro_text: string | null
           name: string
+          reduce_or_stop: string | null
+          seek_medical_care: string | null
           slug: string
           status: Database["public"]["Enums"]["content_status"]
           updated_at: string
         }
         Insert: {
+          acceptable_discomfort?: string | null
           body_region?: string | null
           condition?: string | null
           created_at?: string
@@ -140,11 +144,14 @@ export type Database = {
           id?: string
           intro_text?: string | null
           name: string
+          reduce_or_stop?: string | null
+          seek_medical_care?: string | null
           slug: string
           status?: Database["public"]["Enums"]["content_status"]
           updated_at?: string
         }
         Update: {
+          acceptable_discomfort?: string | null
           body_region?: string | null
           condition?: string | null
           created_at?: string
@@ -152,6 +159,8 @@ export type Database = {
           id?: string
           intro_text?: string | null
           name?: string
+          reduce_or_stop?: string | null
+          seek_medical_care?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["content_status"]
           updated_at?: string
@@ -520,6 +529,51 @@ export type Database = {
           },
         ]
       }
+      program_templates: {
+        Row: {
+          acceptable_discomfort: string | null
+          body_region: string | null
+          condition: string | null
+          created_at: string
+          description: string | null
+          estimated_duration: string | null
+          id: string
+          intro_text: string | null
+          name: string
+          reduce_or_stop: string | null
+          seek_medical_care: string | null
+          updated_at: string
+        }
+        Insert: {
+          acceptable_discomfort?: string | null
+          body_region?: string | null
+          condition?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_duration?: string | null
+          id?: string
+          intro_text?: string | null
+          name: string
+          reduce_or_stop?: string | null
+          seek_medical_care?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acceptable_discomfort?: string | null
+          body_region?: string | null
+          condition?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_duration?: string | null
+          id?: string
+          intro_text?: string | null
+          name?: string
+          reduce_or_stop?: string | null
+          seek_medical_care?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pt_locations: {
         Row: {
           address: string | null
@@ -690,6 +744,119 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: []
+      }
+      template_phase_exercises: {
+        Row: {
+          created_at: string
+          exercise_id: string
+          id: string
+          is_required: boolean
+          override_duration: string | null
+          override_frequency: string | null
+          override_hold_seconds: number | null
+          override_reps: number | null
+          override_sets: number | null
+          phase_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          exercise_id: string
+          id?: string
+          is_required?: boolean
+          override_duration?: string | null
+          override_frequency?: string | null
+          override_hold_seconds?: number | null
+          override_reps?: number | null
+          override_sets?: number | null
+          phase_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          exercise_id?: string
+          id?: string
+          is_required?: boolean
+          override_duration?: string | null
+          override_frequency?: string | null
+          override_hold_seconds?: number | null
+          override_reps?: number | null
+          override_sets?: number | null
+          phase_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_phase_exercises_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercise_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "template_phase_exercises_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "template_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      template_phases: {
+        Row: {
+          approximate_duration: string | null
+          created_at: string
+          estimated_workout_minutes: number | null
+          frequency: string | null
+          goal: string | null
+          id: string
+          progression_criteria: string | null
+          sort_order: number
+          template_id: string
+          title: string
+          updated_at: string
+          warning_text: string | null
+        }
+        Insert: {
+          approximate_duration?: string | null
+          created_at?: string
+          estimated_workout_minutes?: number | null
+          frequency?: string | null
+          goal?: string | null
+          id?: string
+          progression_criteria?: string | null
+          sort_order?: number
+          template_id: string
+          title: string
+          updated_at?: string
+          warning_text?: string | null
+        }
+        Update: {
+          approximate_duration?: string | null
+          created_at?: string
+          estimated_workout_minutes?: number | null
+          frequency?: string | null
+          goal?: string | null
+          id?: string
+          progression_criteria?: string | null
+          sort_order?: number
+          template_id?: string
+          title?: string
+          updated_at?: string
+          warning_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_phases_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "program_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ultrasound_content: {
         Row: {

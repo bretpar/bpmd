@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Copy, Search, ExternalLink, ArrowLeft } from "lucide-react";
 import {
-  EXERCISE_CATEGORIES, DIFFICULTIES, slugify,
+  EXERCISE_CATEGORIES, DIFFICULTIES, slugify, readiness, READINESS_LABEL,
   type LibraryExercise, type Status,
 } from "@/lib/programTypes";
 
@@ -69,6 +69,15 @@ const AdminExerciseLibraryInner = () => {
   const save = async () => {
     if (!editing) return;
     if (!editing.name.trim()) return toast({ title: "Name is required", variant: "destructive" });
+    if (editing.status === "published") {
+      const r = readiness(editing);
+      if (r.status !== "ready") {
+        const proceed = confirm(
+          `This exercise is only ${r.percent}% complete.\nStill missing: ${r.missing.join(", ")}.\n\nPublish anyway?`,
+        );
+        if (!proceed) return;
+      }
+    }
     const payload: any = {
       slug: editing.slug?.trim() || slugify(editing.name),
       name: editing.name.trim(),
@@ -99,6 +108,15 @@ const AdminExerciseLibraryInner = () => {
   };
 
   const publish = async (item: LibraryExercise, nextStatus: Status) => {
+    if (nextStatus === "published") {
+      const r = readiness(item);
+      if (r.status !== "ready") {
+        const proceed = confirm(
+          `This exercise is only ${r.percent}% complete.\nStill missing: ${r.missing.join(", ")}.\n\nPublish anyway?`,
+        );
+        if (!proceed) return;
+      }
+    }
     const { error } = await sb.from("exercise_library").update({ status: nextStatus }).eq("id", item.id);
     if (error) return toast({ title: "Failed", description: error.message, variant: "destructive" });
     load();
@@ -178,7 +196,10 @@ const AdminExerciseLibraryInner = () => {
       </div>
 
       <div className="space-y-2">
-        {filtered.map((i) => (
+        {filtered.map((i) => {
+          const r = readiness(i);
+          const rTone = r.status === "ready" ? "default" : r.status === "nearly" ? "secondary" : "outline";
+          return (
           <div key={i.id} className="flex items-center justify-between p-4 rounded-lg border border-border bg-card">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
@@ -186,9 +207,13 @@ const AdminExerciseLibraryInner = () => {
                 <Badge variant={i.status === "published" ? "default" : "outline"}>{i.status}</Badge>
                 {i.category && <Badge variant="secondary">{EXERCISE_CATEGORIES.find(c=>c.value===i.category)?.label}</Badge>}
                 {i.difficulty && <Badge variant="outline">{i.difficulty}</Badge>}
+                <Badge variant={rTone as any} title={r.missing.length ? `Missing: ${r.missing.join(", ")}` : "All fields present"}>
+                  {READINESS_LABEL[r.status]} · {r.percent}%
+                </Badge>
               </div>
               <p className="text-xs text-muted-foreground truncate mt-1">
                 {i.body_region || "—"} · Used in {usage[i.id] || 0} program(s)
+                {r.missing.length > 0 && ` · Missing: ${r.missing.join(", ")}`}
               </p>
             </div>
             <div className="flex items-center gap-1 shrink-0">
@@ -200,7 +225,8 @@ const AdminExerciseLibraryInner = () => {
               <Button size="icon" variant="ghost" onClick={() => del(i)} aria-label="Delete"><Trash2 className="w-4 h-4" /></Button>
             </div>
           </div>
-        ))}
+          );
+        })}
         {filtered.length === 0 && <p className="text-center py-8 text-muted-foreground">No exercises.</p>}
       </div>
 

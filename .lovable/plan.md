@@ -1,96 +1,108 @@
-# Exercise Programs & Library Rebuild
+# Exercise Program System — Enhancements (Additive)
 
-## Overview
+Nothing existing is replaced. All current routes, tables, GA4 events, localStorage keys, fallback behavior, and published programs keep working.
 
-Replace the current flat exercise lists with a two-layer system: a reusable **Exercise Library** and diagnosis-based **Exercise Programs** made of ordered **Phases**. Admins build programs by dragging library exercises into phases and overriding sets/reps per-program. Patients see a guided, one-exercise-at-a-time workout with local progress tracking.
+## 1. Guided "Create Program" wizard
 
-Existing `rehab_exercises` and related tables stay in place for now; new tables live alongside so nothing breaks. Existing condition pages get a new "Exercise Program" section that links to the guided view.
+New route: `/admin/programs/new` with a 5-step wizard component. Existing `/admin/programs/:id` builder stays as the deep-edit surface and is reused for post-wizard editing.
 
-## Data Model (new tables)
+Steps:
+1. **Program Details** — name, slug (auto from name, editable), body region, pathology (dropdown of existing `pathologies`), intro text, estimated duration.
+2. **Build Phases** — starts empty with a "Load starter phases" button that inserts: Pain and Mobility, Early Strengthening, Advanced Strengthening, Return to Activity (each with sensible default goal/frequency/progression criteria). Rename, add, delete, duplicate, reorder (drag).
+3. **Add Exercises** — per phase: search Exercise Library with filters (region, category, difficulty, equipment), multi-select, drag-reorder, inline overrides (sets/reps/hold/duration/frequency), Required/Optional toggle. Only inserts `phase_exercises` rows referencing existing `exercise_library` — never duplicates library records.
+4. **Preview** — renders the actual patient `ProgramView` component in-place using the in-memory draft (no DB round-trip needed for preview).
+5. **Publish & Attach** — Save as Draft or Publish; pathology picker; on publish/save also writes `pathologies.exercise_program_id` (or existing FK on `injuries` — whichever the current picker uses). "Open full editor" link to `/admin/programs/:id` afterward.
+
+The existing pathology-side program picker in `Admin.tsx` stays as an alternate path.
+
+Add "Create Guided Program" button on `/admin/programs` next to the existing "New Program".
+
+## 2. Program templates
+
+New table `program_templates` (mirrors program shape) + `template_phases` + `template_phase_exercises`. Admin actions:
+- New program → chooser modal: Blank / From Existing Program / From Template.
+- "Save as Template" action on any program (copies phases + phase_exercises into template tables).
+- Templates admin at `/admin/programs/templates` (list, edit name/description, delete).
+
+Duplicating from a program or template inserts new `program_phases` and `phase_exercises` rows but keeps `exercise_id` references intact (shared library).
+
+## 3. Clearer patient phase state
+
+Add `phase_status` per patient in localStorage alongside existing workout progress:
 
 ```text
-exercise_library
-  id, slug, name, body_region, category (enum: mobility|stretching|strength|
-    stability|balance|return_to_sport), difficulty (beginner|intermediate|advanced),
-  equipment, image_url, video_url, short_description, instructions,
-  default_sets, default_reps, default_hold_seconds, default_frequency,
-  what_to_feel, common_mistakes, safety_notes, status (draft|published)
-
-exercise_programs
-  id, slug, name, body_region, condition, intro_text,
-  estimated_duration, status (draft|published)
-
-program_phases
-  id, program_id, sort_order, title, goal, frequency,
-  estimated_workout_minutes, approximate_duration,
-  progression_criteria, warning_text
-
-phase_exercises
-  id, phase_id, exercise_id, sort_order,
-  override_sets, override_reps, override_hold_seconds,
-  override_duration, override_frequency, is_required
+key: bpmd:program:<slug>:phase_state
+value: { currentPhaseId, completedPhaseIds[] }
 ```
 
-Condition pages: add nullable `exercise_program_id` (or slug reference) on the existing pathology/condition record so admins can attach one published program.
+`ProgramView` phase list badges:
+- **Start Here** — first phase when no state saved
+- **Current Phase** — matches currentPhaseId
+- **Completed** — in completedPhaseIds
+- **Next Phase** — the phase after current
+- Others: neutral
 
-All tables: RLS — public SELECT on `published` rows; admin-only write via `has_role(auth.uid(),'admin')`. Grants for `anon`, `authenticated`, `service_role` as appropriate.
+Workout completion no longer auto-advances. When all exercises in a phase are checked, show a "Ready for the next phase?" panel with:
+- Phase `progression_criteria`
+- "Continue Current Phase" (keeps current, clears checkboxes for another pass)
+- "Start Next Phase" (marks current complete, sets next as current, navigates)
 
-## Admin UI
+## 4. Pain & safety guidance (program-level)
 
-**`/admin/exercise-library`**
-- Table with search, filters (region, category, difficulty, status)
-- Add / Edit / Duplicate / Preview / Publish
-- "Used in N programs" column; delete blocked with warning if used
+Migration adds nullable columns on `exercise_programs`:
+- `acceptable_discomfort`
+- `reduce_or_stop`
+- `seek_medical_care`
 
-**`/admin/programs`**
-- List programs; create/duplicate/publish
-- **`/admin/programs/:id`** — Program Builder
-  - Program metadata form
-  - Ordered phase list (drag to reorder, duplicate, delete)
-  - Per phase: metadata + ordered exercise list
-  - "Add exercise" modal → searches Exercise Library → inserts into phase
-  - Drag-and-drop exercise ordering (`@dnd-kit/sortable`, already common)
-  - Inline overrides for sets/reps/hold/duration/frequency + required toggle
-  - Preview patient view, Save Draft, Publish
+Wizard step 1 and program editor expose these with editable default copy (constants in `programTypes.ts`). Displayed as a collapsible "Pain & Safety" accordion on `/programs/:slug` and inside the guided workout header.
 
-Attach to condition: on existing condition/pathology admin form add a program picker.
+## 5. Exercise content-completeness indicator
 
-## Patient UI
+Pure client-side calculation in `programTypes.ts`:
 
-**`/programs/:slug`** — program overview
-- Header: title, intro, current phase, estimated time, frequency, **Start Today's Workout**
-- Accordion of phases (current expanded, others collapsed): title, goal, exercise count, time, frequency, progression criteria
-- **Print Program** button → clean print stylesheet for the active phase
+```text
+readiness(ex) = count of present fields / 5, using:
+  - image_url OR video_url
+  - instructions
+  - default_sets/reps/hold_seconds OR any override-duration marker
+  - what_to_feel
+  - safety_notes
+```
 
-**`/programs/:slug/workout`** — guided runner
-- One exercise card at a time: image/video, name, prescribed sets/reps/hold/duration, instructions, what to feel, common mistake, safety
-- Mark Complete checkbox, Previous / Next
-- Progress "2 of 4 completed"; completion screen at end
-- Progress persisted in `localStorage` keyed by program+phase
+Status: Incomplete (<40%), Nearly Ready (<80%), Ready to Publish (≥80%).
 
-## Condition Page Integration
+Shown in `AdminExerciseLibrary` list as a badge + percentage. On publish action, if <80%, confirm dialog: "This exercise is missing X, Y. Publish anyway?" Drafts save freely.
 
-On each condition page, replace the exercise list with a compact "Exercise Program" card:
-- Program name, phase count, estimated workout time, current starting phase
-- **View Exercise Program** button → `/programs/:slug`
+## Technical Details
 
-If no program is attached, keep the existing exercise list as fallback.
+### New files
+- `src/pages/AdminProgramWizard.tsx` — 5-step wizard (uses same primitives as existing builder).
+- `src/pages/AdminProgramTemplates.tsx` — templates list/edit.
+- `src/components/programs/PhaseStatusBadge.tsx`, `PainSafetyPanel.tsx`, `ReadinessBadge.tsx`, `NextPhasePanel.tsx`.
+- `src/lib/programState.ts` — localStorage helpers for phase state (namespaced, backward-compatible with existing workout progress keys).
 
-## Build Order
+### Edited files
+- `src/App.tsx` — add routes: `/admin/programs/new`, `/admin/programs/templates`, `/admin/programs/templates/:id`.
+- `src/pages/AdminPrograms.tsx` — add "Create Guided Program" + "From existing / From template" chooser + "Save as Template".
+- `src/pages/AdminExerciseLibrary.tsx` — readiness badges + publish confirmation.
+- `src/pages/ProgramView.tsx` — phase status badges, next-phase panel, pain/safety accordion; drop auto-advance-on-all-checked.
+- `src/lib/programTypes.ts` — readiness helper, safety default copy, starter phases constant.
+- `src/hooks/usePrograms.tsx` — template hooks; extend `Program` type with safety fields.
 
-1. Migration: new tables + RLS + grants + condition FK
-2. Admin Exercise Library CRUD
-3. Admin Program Builder (phases + drag-and-drop exercises + overrides)
-4. Patient program overview + guided workout + print view
-5. Wire condition pages to attached programs
-6. Seed a couple of sample programs (Rotator Cuff Pain, Knee Pain) so the flow is testable
+### Migration
+- Add nullable safety columns to `exercise_programs`.
+- Create `program_templates`, `template_phases`, `template_phase_exercises` with the same shape as their program counterparts. RLS: admin-only read/write (templates aren't patient-facing). Full GRANTs to `authenticated` + `service_role`.
 
-## Out of Scope (per request)
+### Preserved
+- `/admin/programs/:id` full editor, existing pathology program picker, `rehab_exercises` fallback, GA4 events (`program_start`, `exercise_page_view`), existing workout-progress localStorage keys.
 
-Patient accounts, clinician prescribing, messaging, server-side progress tracking, analytics dashboards.
+## Build order
 
-## Notes
-
-- Uses existing stack: Lovable Cloud, React Query, shadcn, `@dnd-kit` for drag-and-drop.
-- Existing `rehab_exercises` / `ExerciseLibrary` pages remain untouched; new system is additive. We can migrate/retire the old data in a later pass once programs are populated.
-- GA4 event `exercise_page_view` fires on the guided workout page; program start fires a new `program_start` event.
+1. Migration (safety cols + template tables).
+2. `programTypes.ts` + `programState.ts` helpers, starter phases, default safety copy.
+3. Templates hooks + `AdminProgramTemplates` page.
+4. `AdminProgramWizard` (5 steps).
+5. `AdminPrograms` chooser + "Save as Template".
+6. `AdminExerciseLibrary` readiness badges + publish guard.
+7. `ProgramView` phase status, next-phase panel, pain/safety panel.
+8. Route wiring in `App.tsx`.
