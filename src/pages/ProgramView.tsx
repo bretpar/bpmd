@@ -197,13 +197,13 @@ const ProgramView = () => {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  {ph.goal && <p className="text-sm mb-3"><span className="font-medium">Goal: </span>{ph.goal}</p>}
-                  {ph.progression_criteria && <p className="text-sm mb-3"><span className="font-medium">Progress when: </span>{ph.progression_criteria}</p>}
-                  {ph.warning_text && (
-                    <p className="text-sm bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-md p-3 mb-3 inline-flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
-                      <span>{ph.warning_text}</span>
-                    </p>
+                  <div className="mb-4">
+                    <PhaseGuidance goal={ph.goal} criteria={ph.progression_criteria} warning={ph.warning_text} />
+                  </div>
+                  {status !== "current" && (
+                    <div className="mb-3 print:hidden">
+                      <Button size="sm" variant="outline" onClick={() => chooseCurrent(ph.id)}>Make this my current phase</Button>
+                    </div>
                   )}
                   {status !== "current" && (
                     <div className="mb-3 print:hidden">
