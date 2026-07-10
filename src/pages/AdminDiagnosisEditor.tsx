@@ -655,8 +655,8 @@ const Inner = () => {
         </AccordionItem>
 
         {/* ---------- 3. All Exercises ---------- */}
-        <AccordionItem value="all" className="border rounded-xl bg-card px-4">
-          <AccordionTrigger className="hover:no-underline py-4">
+        <AccordionItem value="all" className="border rounded-xl bg-card px-3 sm:px-4">
+          <AccordionTrigger className="hover:no-underline py-4 min-h-14">
             <div className="text-left">
               <div className="font-semibold">3. All Exercises</div>
               <div className="text-xs text-muted-foreground">
@@ -675,14 +675,14 @@ const Inner = () => {
                   {g.label}
                   <span className="ml-2 text-xs font-normal text-muted-foreground">{g.items.length}</span>
                 </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {g.items.map((r) => {
                     const on = assignedIds.includes(r.id);
                     return (
                       <label key={r.id}
-                        className={`flex items-start gap-2 p-2 rounded border cursor-pointer transition-colors ${on ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
-                        <input type="checkbox" className="mt-0.5" checked={on} onChange={() => toggleAssigned(r.id)} />
-                        <span className="text-sm leading-tight">{r.title}</span>
+                        className={`flex items-center gap-3 p-3 min-h-12 rounded-md border cursor-pointer transition-colors ${on ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
+                        <input type="checkbox" className="h-5 w-5 shrink-0" checked={on} onChange={() => toggleAssigned(r.id)} />
+                        <span className="text-sm leading-snug">{r.title}</span>
                       </label>
                     );
                   })}
@@ -693,8 +693,8 @@ const Inner = () => {
         </AccordionItem>
 
         {/* ---------- 4. Live Patient Preview ---------- */}
-        <AccordionItem value="preview" className="border rounded-xl bg-card px-4">
-          <AccordionTrigger className="hover:no-underline py-4">
+        <AccordionItem value="preview" className="border rounded-xl bg-card px-3 sm:px-4">
+          <AccordionTrigger className="hover:no-underline py-4 min-h-14">
             <div className="text-left">
               <div className="font-semibold">4. Live Patient Preview</div>
               <div className="text-xs text-muted-foreground">Updates automatically as you edit above</div>
@@ -704,6 +704,7 @@ const Inner = () => {
             <LivePreview pathologyName={pathology.name} phases={phases} assignedRehab={assignedRehab} />
           </AccordionContent>
         </AccordionItem>
+
       </Accordion>
 
       <LibraryPickerDialog
