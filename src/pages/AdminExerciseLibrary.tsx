@@ -69,6 +69,15 @@ const AdminExerciseLibraryInner = () => {
   const save = async () => {
     if (!editing) return;
     if (!editing.name.trim()) return toast({ title: "Name is required", variant: "destructive" });
+    if (editing.status === "published") {
+      const r = readiness(editing);
+      if (r.status !== "ready") {
+        const proceed = confirm(
+          `This exercise is only ${r.percent}% complete.\nStill missing: ${r.missing.join(", ")}.\n\nPublish anyway?`,
+        );
+        if (!proceed) return;
+      }
+    }
     const payload: any = {
       slug: editing.slug?.trim() || slugify(editing.name),
       name: editing.name.trim(),
