@@ -484,22 +484,22 @@ const Inner = () => {
   }
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8 space-y-4">
-      <div className="flex items-center justify-between gap-3">
+    <div className="container mx-auto max-w-5xl px-3 sm:px-4 py-6 sm:py-8 space-y-4">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <Link
           to="/admin"
           onClick={(e) => { if (!confirmLeave()) e.preventDefault(); }}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary min-h-11 py-2"
         >
           <ArrowLeft className="w-4 h-4" /> Admin
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {dirty && (
             <span className="text-xs font-medium text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-2 py-0.5">
               Unsaved changes
             </span>
           )}
-          <Button asChild variant="outline" size="sm">
+          <Button asChild variant="outline" size="sm" className="h-10">
             <Link
               to={`/exercise-library/region/${slugify(region || "")}/pathology/${pathology.slug}`}
               target="_blank"
