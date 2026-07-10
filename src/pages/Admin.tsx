@@ -52,7 +52,9 @@ type Injury = {
   is_active: boolean;
   sort_order: number;
   joint_ids: string[];
+  exercise_program_id: string | null;
 };
+
 
 type RehabExercise = {
   id: string;
