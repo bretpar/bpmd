@@ -338,14 +338,18 @@ const Inner = () => {
   /* --- Pathology info --- */
   const saveInfo = async () => {
     if (!pathology) return;
-    const { error } = await sb.from("pathologies").update({
+    const patch = {
       name: pathology.name.trim(),
       slug: pathology.slug?.trim() || slugify(pathology.name),
       short_description: pathology.short_description || null,
       full_description: pathology.full_description || null,
       is_active: pathology.is_active,
-    }).eq("id", pathology.id);
+    };
+    const { error } = await sb.from("pathologies").update(patch).eq("id", pathology.id);
     if (error) return toast({ title: "Failed", description: error.message, variant: "destructive" });
+    const next = { ...pathology, ...patch };
+    setPathology(next);
+    setSavedPathology(next);
     toast({ title: "Diagnosis saved" });
   };
 
