@@ -118,11 +118,45 @@ const Builder = () => {
       condition: meta.condition || null,
       intro_text: meta.intro_text || null,
       estimated_duration: meta.estimated_duration || null,
+      acceptable_discomfort: meta.acceptable_discomfort || null,
+      reduce_or_stop: meta.reduce_or_stop || null,
+      seek_medical_care: meta.seek_medical_care || null,
       status: meta.status,
     }).eq("id", id);
     if (error) return toast({ title: "Failed", description: error.message, variant: "destructive" });
     toast({ title: "Program saved" });
     setReloadKey((k) => k + 1);
+  };
+
+  const saveAsTemplate = async () => {
+    if (!data) return;
+    const name = prompt("Template name?", `${data.program.name} template`);
+    if (!name) return;
+    const src: any = data.program;
+    const { data: tpl, error } = await sb.from("program_templates").insert({
+      name, description: null,
+      body_region: src.body_region, condition: src.condition, intro_text: src.intro_text,
+      estimated_duration: src.estimated_duration,
+      acceptable_discomfort: src.acceptable_discomfort,
+      reduce_or_stop: src.reduce_or_stop, seek_medical_care: src.seek_medical_care,
+    }).select("id").single();
+    if (error || !tpl) return toast({ title: "Failed", description: error?.message, variant: "destructive" });
+    for (const ph of data.phases) {
+      const { data: newPh } = await sb.from("template_phases").insert({
+        template_id: tpl.id, sort_order: ph.sort_order, title: ph.title, goal: ph.goal, frequency: ph.frequency,
+        estimated_workout_minutes: ph.estimated_workout_minutes, approximate_duration: ph.approximate_duration,
+        progression_criteria: ph.progression_criteria, warning_text: ph.warning_text,
+      }).select("id").single();
+      if (newPh && ph.exercises.length) {
+        await sb.from("template_phase_exercises").insert(ph.exercises.map((e) => ({
+          phase_id: newPh.id, exercise_id: e.exercise_id, sort_order: e.sort_order,
+          override_sets: e.override_sets, override_reps: e.override_reps,
+          override_hold_seconds: e.override_hold_seconds, override_duration: e.override_duration,
+          override_frequency: e.override_frequency, is_required: e.is_required,
+        })));
+      }
+    }
+    toast({ title: "Saved as template" });
   };
 
   const addPhase = async () => {
