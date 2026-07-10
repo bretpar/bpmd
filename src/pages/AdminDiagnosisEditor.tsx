@@ -176,14 +176,14 @@ const LivePreview = ({
 }) => {
   const grouped = useMemo(() => categorize(assignedRehab), [assignedRehab]);
   return (
-    <div className="rounded-lg border border-border bg-muted/20 p-4 md:p-6">
+    <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-6">
       <p className="text-xs text-muted-foreground mb-3">
         Preview — this is what patients see on this diagnosis page.
       </p>
       <div className="rounded-xl border border-border bg-background overflow-hidden">
         <div className="p-4 border-b bg-muted/30">
           <p className="text-[10px] uppercase tracking-wide text-primary font-medium">Start Here</p>
-          <h3 className="text-lg font-semibold">{pathologyName}</h3>
+          <h3 className="text-lg font-semibold leading-tight">{pathologyName}</h3>
           <p className="text-xs text-muted-foreground mt-1">
             Start with these exercises. They are organized in the order patients typically progress through rehabilitation.
           </p>
@@ -194,14 +194,32 @@ const LivePreview = ({
           <div className="divide-y">
             {phases.map((ph, idx) => (
               <div key={ph.id} className="p-4">
-                <div className="font-medium text-sm">Phase {idx + 1} – {ph.title}</div>
-                {ph.goal && <p className="text-xs text-muted-foreground mt-0.5">{ph.goal}</p>}
-                <p className="text-xs text-muted-foreground mt-1">
+                <div className="font-medium text-sm leading-snug">
+                  <span className="text-muted-foreground mr-1">Phase {idx + 1}</span>
+                  {ph.title}
+                </div>
+                {ph.goal && <p className="text-xs text-muted-foreground mt-1">{ph.goal}</p>}
+                <p className="text-[11px] text-muted-foreground mt-1">
                   {ph.exercises.length} exercise{ph.exercises.length === 1 ? "" : "s"}
                 </p>
-                <ul className="mt-2 text-sm text-foreground/80 list-disc pl-5 space-y-0.5">
+                <ul className="mt-2 space-y-1.5">
                   {ph.exercises.map((pe) => (
-                    <li key={pe.id}>{pe.exercise_library?.name || "(missing)"}</li>
+                    <li
+                      key={pe.id}
+                      className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2 min-h-11 text-sm"
+                    >
+                      {pe.exercise_library?.image_url ? (
+                        <img
+                          src={pe.exercise_library.image_url}
+                          alt=""
+                          loading="lazy"
+                          className="w-10 h-10 rounded object-cover shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded bg-muted shrink-0" />
+                      )}
+                      <span className="leading-tight">{pe.exercise_library?.name || "(missing)"}</span>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -218,13 +236,21 @@ const LivePreview = ({
           <div className="space-y-4">
             {grouped.map((g) => (
               <div key={g.key}>
-                <div className="text-xs font-semibold text-foreground mb-1.5 pb-1 border-b">
+                <div className="text-xs font-semibold text-foreground mb-2 pb-1 border-b">
                   {g.label} <span className="text-muted-foreground font-normal">({g.items.length})</span>
                 </div>
-                <div className="grid sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {g.items.map((r) => (
-                    <div key={r.id} className="rounded border border-border bg-background p-2 text-sm">
-                      {r.title}
+                    <div
+                      key={r.id}
+                      className="flex items-center gap-3 rounded-md border border-border bg-background p-2 min-h-12 text-sm"
+                    >
+                      {r.image_url ? (
+                        <img src={r.image_url} alt="" loading="lazy" className="w-10 h-10 rounded object-cover shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 rounded bg-muted shrink-0" />
+                      )}
+                      <span className="leading-tight">{r.title}</span>
                     </div>
                   ))}
                 </div>
