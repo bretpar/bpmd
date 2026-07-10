@@ -187,7 +187,10 @@ const AdminExerciseLibraryInner = () => {
       </div>
 
       <div className="space-y-2">
-        {filtered.map((i) => (
+        {filtered.map((i) => {
+          const r = readiness(i);
+          const rTone = r.status === "ready" ? "default" : r.status === "nearly" ? "secondary" : "outline";
+          return (
           <div key={i.id} className="flex items-center justify-between p-4 rounded-lg border border-border bg-card">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
@@ -195,9 +198,13 @@ const AdminExerciseLibraryInner = () => {
                 <Badge variant={i.status === "published" ? "default" : "outline"}>{i.status}</Badge>
                 {i.category && <Badge variant="secondary">{EXERCISE_CATEGORIES.find(c=>c.value===i.category)?.label}</Badge>}
                 {i.difficulty && <Badge variant="outline">{i.difficulty}</Badge>}
+                <Badge variant={rTone as any} title={r.missing.length ? `Missing: ${r.missing.join(", ")}` : "All fields present"}>
+                  {READINESS_LABEL[r.status]} · {r.percent}%
+                </Badge>
               </div>
               <p className="text-xs text-muted-foreground truncate mt-1">
                 {i.body_region || "—"} · Used in {usage[i.id] || 0} program(s)
+                {r.missing.length > 0 && ` · Missing: ${r.missing.join(", ")}`}
               </p>
             </div>
             <div className="flex items-center gap-1 shrink-0">
@@ -209,7 +216,8 @@ const AdminExerciseLibraryInner = () => {
               <Button size="icon" variant="ghost" onClick={() => del(i)} aria-label="Delete"><Trash2 className="w-4 h-4" /></Button>
             </div>
           </div>
-        ))}
+          );
+        })}
         {filtered.length === 0 && <p className="text-center py-8 text-muted-foreground">No exercises.</p>}
       </div>
 
