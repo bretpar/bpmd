@@ -8,8 +8,45 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   ArrowLeft, Printer, Play, Clock, Repeat, AlertTriangle, ChevronLeft, ChevronRight, CheckCircle2,
-  ShieldAlert, ArrowRight, RotateCcw,
+  ShieldAlert, ArrowRight, RotateCcw, Target, TrendingUp,
 } from "lucide-react";
+
+const PhaseGuidance = ({
+  goal, criteria, warning, compact = false,
+}: { goal?: string | null; criteria?: string | null; warning?: string | null; compact?: boolean }) => {
+  if (!goal && !criteria && !warning) return null;
+  return (
+    <div className={`grid gap-2 ${compact ? "" : "sm:grid-cols-2"}`}>
+      {goal && (
+        <div className="p-3 rounded-lg border border-primary/30 bg-primary/5">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Target className="w-4 h-4 text-primary" />
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Phase goal</p>
+          </div>
+          <p className="text-sm text-foreground">{goal}</p>
+        </div>
+      )}
+      {criteria && (
+        <div className="p-3 rounded-lg border border-emerald-300 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30">
+          <div className="flex items-center gap-1.5 mb-1">
+            <TrendingUp className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-300">Progress to next phase when</p>
+          </div>
+          <p className="text-sm text-foreground">{criteria}</p>
+        </div>
+      )}
+      {warning && (
+        <div className={`p-3 rounded-lg border border-amber-300 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30 flex items-start gap-2 ${compact ? "" : "sm:col-span-2"}`}>
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300 mb-0.5">Important</p>
+            <p className="text-sm">{warning}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 import { useFullProgram } from "@/hooks/usePrograms";
 import { prescription } from "@/lib/programTypes";
 import { trackEvent, trackExercisePageView } from "@/lib/analytics";
@@ -160,13 +197,13 @@ const ProgramView = () => {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  {ph.goal && <p className="text-sm mb-3"><span className="font-medium">Goal: </span>{ph.goal}</p>}
-                  {ph.progression_criteria && <p className="text-sm mb-3"><span className="font-medium">Progress when: </span>{ph.progression_criteria}</p>}
-                  {ph.warning_text && (
-                    <p className="text-sm bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-md p-3 mb-3 inline-flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
-                      <span>{ph.warning_text}</span>
-                    </p>
+                  <div className="mb-4">
+                    <PhaseGuidance goal={ph.goal} criteria={ph.progression_criteria} warning={ph.warning_text} />
+                  </div>
+                  {status !== "current" && (
+                    <div className="mb-3 print:hidden">
+                      <Button size="sm" variant="outline" onClick={() => chooseCurrent(ph.id)}>Make this my current phase</Button>
+                    </div>
                   )}
                   {status !== "current" && (
                     <div className="mb-3 print:hidden">
@@ -288,6 +325,10 @@ export const ProgramWorkout = () => {
             <div className="h-2 bg-muted rounded-full mt-2 overflow-hidden">
               <div className="h-full bg-primary transition-all" style={{ width: total ? `${(completeCount / total) * 100}%` : "0%" }} />
             </div>
+          </div>
+
+          <div className="mb-4">
+            <PhaseGuidance goal={phase.goal} criteria={phase.progression_criteria} warning={phase.warning_text} compact />
           </div>
 
           <PainSafetyPanel
