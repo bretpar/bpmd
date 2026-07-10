@@ -523,14 +523,146 @@ export const RegionGeneralDetail = () => {
   );
 };
 
-// ---------- Pathology exercises for a joint ----------
+// ---------- Library-exercise renderers (for Recommended Recovery Program) ----------
+type FullProgramShape = {
+  id: string;
+  slug: string;
+  name: string;
+  intro_text: string | null;
+  estimated_duration: string | null;
+  program_phases: Array<{
+    id: string;
+    title: string;
+    sort_order: number;
+    goal: string | null;
+    estimated_workout_minutes: number | null;
+    phase_exercises: Array<
+      PhaseExercise & { exercise_library: LibraryExercise | null }
+    >;
+  }>;
+};
+
+const LibraryDetailModal = ({
+  ex,
+  pe,
+  onClose,
+}: {
+  ex: LibraryExercise | null;
+  pe?: PhaseExercise;
+  onClose: () => void;
+}) => {
+  if (!ex) return null;
+  const dose = pe ? prescription(pe, ex) : "";
+  return (
+    <Dialog open={!!ex} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl">{ex.name}</DialogTitle>
+          <DialogDescription>
+            Exercise instructions, prescription, and safety guidance.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-5 text-sm">
+          {ex.image_url ? (
+            <img src={ex.image_url} alt={`${ex.name} demonstration`} className="w-full rounded-lg" />
+          ) : !ex.video_url ? (
+            <div className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground">
+              Image/video coming soon.
+            </div>
+          ) : null}
+          {ex.video_url && (
+            <Section title="Video">
+              <a href={ex.video_url} target="_blank" rel="noreferrer" className="text-primary hover:underline break-all">
+                {ex.video_url}
+              </a>
+            </Section>
+          )}
+          {ex.short_description && <Section title="Why this helps">{ex.short_description}</Section>}
+          {ex.instructions && <Section title="How to do it">{ex.instructions}</Section>}
+          {dose && <Section title="Prescription">{dose}</Section>}
+          {ex.what_to_feel && <Section title="What you should feel">{ex.what_to_feel}</Section>}
+          {ex.safety_notes && (
+            <div className="bg-muted/40 border border-border rounded-lg p-3">
+              <p className="text-sm font-semibold text-foreground/80 mb-1">Stop if</p>
+              <p className="text-foreground/70 whitespace-pre-line">{ex.safety_notes}</p>
+            </div>
+          )}
+          <div className="bg-muted/40 border border-border rounded-lg p-3">
+            <p className="text-sm font-semibold text-foreground/80 mb-1">When to stop or contact a clinician</p>
+            <p className="text-foreground/70">{PATIENT_SAFETY_GUIDANCE}</p>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const LibraryExerciseCard = ({
+  pe,
+  onView,
+}: {
+  pe: PhaseExercise & { exercise_library: LibraryExercise | null };
+  onView: (ex: LibraryExercise, pe: PhaseExercise) => void;
+}) => {
+  const ex = pe.exercise_library;
+  if (!ex) return null;
+  const dose = prescription(pe, ex);
+  return (
+    <Card className="flex flex-col h-full hover:shadow-md transition-shadow">
+      {ex.image_url && (
+        <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
+          <img src={ex.image_url} alt={ex.name} className="w-full h-full object-cover" loading="lazy" />
+        </div>
+      )}
+      <CardContent className="p-5 flex-1 flex flex-col gap-3">
+        <h4 className="font-semibold text-base text-foreground leading-snug">{ex.name}</h4>
+        {ex.short_description && (
+          <p className="text-sm text-muted-foreground line-clamp-3">{ex.short_description}</p>
+        )}
+        <div className="flex flex-wrap gap-1.5">
+          {ex.difficulty && <Badge variant="outline" className="capitalize">{ex.difficulty}</Badge>}
+          {dose && <Badge variant="secondary" className="font-normal">{dose}</Badge>}
+        </div>
+        <Button variant="outline" size="sm" className="mt-auto" onClick={() => onView(ex, pe)}>
+          View Details
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Group rehab exercises into simple patient-friendly categories.
+const REHAB_GROUP_LABELS: Record<string, string> = {
+  acute: "Pain Relief",
+  early_rehab: "Mobility & Motion",
+  strengthening: "Strengthening",
+  return_to_activity: "Advanced / Return to Sport",
+  maintenance: "Maintenance",
+  other: "More Exercises",
+};
+
+const groupRehabExercises = (list: RehabExercise[]) => {
+  const buckets = new Map<string, RehabExercise[]>();
+  for (const e of list) {
+    const key = e.rehab_phase && REHAB_GROUP_LABELS[e.rehab_phase] ? e.rehab_phase : "other";
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key)!.push(e);
+  }
+  const order = [...REHAB_PHASE_ORDER, "other"];
+  return order
+    .filter((k) => buckets.has(k))
+    .map((k) => ({ key: k, label: REHAB_GROUP_LABELS[k], items: buckets.get(k)! }));
+};
+
 export const RegionPathologyDetail = () => {
   const { slug = "", pathologySlug = "" } = useParams();
   const { items: locations } = useBodyLocations();
   const location = locations.find((l) => l.slug === slug);
   const displayName = location?.name || slug;
   const { data: exercises, loading } = useRehabExercises();
-  const [program, setProgram] = useState<any>(null);
+  const [program, setProgram] = useState<FullProgramShape | null>(null);
+  const [activeLib, setActiveLib] = useState<{ ex: LibraryExercise; pe?: PhaseExercise } | null>(null);
+  const [activeRehab, setActiveRehab] = useState<RehabExercise | null>(null);
 
   const list = useMemo(
     () => exercises.filter((e) => e.pathology_slugs.includes(pathologySlug)),
@@ -551,14 +683,32 @@ export const RegionPathologyDetail = () => {
       if (!p?.exercise_program_id) { setProgram(null); return; }
       const { data: prog } = await (supabase as any)
         .from("exercise_programs")
-        .select("id, slug, name, estimated_duration, intro_text, status, program_phases(id, title, estimated_workout_minutes, sort_order)")
+        .select(`
+          id, slug, name, intro_text, estimated_duration, status,
+          program_phases (
+            id, title, sort_order, goal, estimated_workout_minutes,
+            phase_exercises (
+              id, phase_id, exercise_id, sort_order,
+              override_sets, override_reps, override_hold_seconds,
+              override_duration, override_frequency, is_required,
+              exercise_library ( * )
+            )
+          )
+        `)
         .eq("id", p.exercise_program_id)
         .eq("status", "published")
         .maybeSingle();
+      if (!prog) { setProgram(null); return; }
+      // Sort nested arrays defensively.
+      prog.program_phases = (prog.program_phases || []).sort((a: any, b: any) => a.sort_order - b.sort_order);
+      prog.program_phases.forEach((ph: any) => {
+        ph.phase_exercises = (ph.phase_exercises || []).sort((a: any, b: any) => a.sort_order - b.sort_order);
+      });
       setProgram(prog);
     })();
   }, [pathologySlug]);
 
+  const grouped = useMemo(() => groupRehabExercises(list), [list]);
 
   return (
     <Layout>
@@ -589,37 +739,119 @@ export const RegionPathologyDetail = () => {
             {pathologyName}
           </h1>
 
-          {program && (
-            <div className="mb-6 p-5 rounded-xl border border-border bg-card">
-              <p className="text-xs uppercase tracking-wide text-primary mb-1">Exercise Program</p>
-              <h2 className="text-xl font-semibold">{program.name}</h2>
-              <div className="text-sm text-muted-foreground mt-1">
-                {program.program_phases?.length || 0} phase(s)
-                {program.program_phases?.[0]?.estimated_workout_minutes ? ` · ${program.program_phases[0].estimated_workout_minutes} min/workout` : ""}
-                {program.estimated_duration ? ` · ${program.estimated_duration}` : ""}
+          {/* ---------- Recommended Recovery Program ---------- */}
+          {program && program.program_phases.length > 0 && (
+            <div className="mb-10 rounded-xl border border-border bg-card overflow-hidden">
+              <div className="p-5 md:p-6 border-b border-border bg-muted/30">
+                <div className="flex items-center gap-2 mb-1">
+                  <ListOrdered className="w-4 h-4 text-primary" />
+                  <p className="text-xs uppercase tracking-wide text-primary font-medium">
+                    Recommended Recovery Program
+                  </p>
+                </div>
+                <h2 className="text-xl md:text-2xl font-semibold text-foreground">{program.name}</h2>
+                <p className="text-sm text-muted-foreground mt-1.5">
+                  These exercises are presented in the order patients typically progress through rehabilitation.
+                  Expand any phase to see the exercises in detail.
+                </p>
               </div>
-              {program.program_phases?.[0] && (
-                <p className="text-sm text-muted-foreground mt-1">Starts with: {program.program_phases.sort((a: any, b: any) => a.sort_order - b.sort_order)[0].title}</p>
-              )}
-              <Button asChild className="mt-4"><Link to={`/programs/${program.slug}`}>View Exercise Program →</Link></Button>
+
+              <Accordion type="multiple" defaultValue={[program.program_phases[0]?.id]} className="px-2 md:px-4">
+                {program.program_phases.map((ph, idx) => (
+                  <AccordionItem key={ph.id} value={ph.id} className="border-b last:border-b-0">
+                    <AccordionTrigger className="hover:no-underline py-4">
+                      <div className="flex-1 text-left pr-3">
+                        <div className="font-semibold text-foreground">
+                          Phase {idx + 1} – {ph.title}
+                        </div>
+                        {ph.phase_exercises.length > 0 && (
+                          <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                            {ph.phase_exercises
+                              .map((pe) => pe.exercise_library?.name)
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </div>
+                        )}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      {ph.goal && (
+                        <p className="text-sm text-muted-foreground mb-4 px-1">{ph.goal}</p>
+                      )}
+                      {ph.phase_exercises.length === 0 ? (
+                        <p className="text-sm text-muted-foreground px-1 pb-3">No exercises assigned yet.</p>
+                      ) : (
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
+                          {ph.phase_exercises.map((pe) => (
+                            <LibraryExerciseCard
+                              key={pe.id}
+                              pe={pe}
+                              onView={(ex, p) => setActiveLib({ ex, pe: p })}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </div>
           )}
 
-          {loading ? (
-            <p className="text-center py-12 text-muted-foreground">Loading...</p>
-          ) : program ? null : (
-            <ExerciseList
-              exercises={list}
-              emptyMessage="Exercises for this condition are coming soon. Please ask your clinician for guidance."
-            />
-          )}
+          {/* ---------- All Exercises ---------- */}
+          <div>
+            <div className="mb-4">
+              <h2 className="text-xl md:text-2xl font-semibold text-foreground">All Exercises</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Every exercise for {pathologyName.toLowerCase()}, grouped by category. Browse freely if you already know what you're looking for.
+              </p>
+            </div>
+
+            {loading ? (
+              <p className="text-center py-12 text-muted-foreground">Loading...</p>
+            ) : list.length === 0 ? (
+              <div className="text-center py-16 border border-dashed border-border rounded-lg">
+                <Activity className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
+                <p className="text-muted-foreground">
+                  Exercises for this condition are coming soon. Please ask your clinician for guidance.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {grouped.map((g) => (
+                  <div key={g.key}>
+                    <h3 className="text-base font-semibold text-foreground mb-3 pb-1.5 border-b border-border">
+                      {g.label}
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        {g.items.length} exercise{g.items.length === 1 ? "" : "s"}
+                      </span>
+                    </h3>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {g.items.map((ex) => (
+                        <ExerciseCard key={ex.id} ex={ex} onView={setActiveRehab} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <SafetyNote />
         </div>
       </section>
+
+      <LibraryDetailModal
+        ex={activeLib?.ex ?? null}
+        pe={activeLib?.pe}
+        onClose={() => setActiveLib(null)}
+      />
+      <DetailModal ex={activeRehab} onClose={() => setActiveRehab(null)} />
     </Layout>
   );
 };
+
+
 
 // ---------- Search ----------
 export const ExerciseSearch = () => {
