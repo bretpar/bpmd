@@ -514,14 +514,15 @@ const Inner = () => {
 
       <div>
         <p className="text-xs uppercase tracking-wide text-primary font-medium mb-1">Diagnosis</p>
-        <h1 className="text-3xl font-bold text-foreground">{pathology.name}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground break-words">{pathology.name}</h1>
         {region && <p className="text-sm text-muted-foreground mt-1">{region}</p>}
       </div>
 
       <Accordion type="multiple" defaultValue={["info", "start-here", "all", "preview"]} className="space-y-3">
         {/* ---------- 1. Diagnosis Information ---------- */}
-        <AccordionItem value="info" className="border rounded-xl bg-card px-4">
-          <AccordionTrigger className="hover:no-underline py-4">
+        <AccordionItem value="info" className="border rounded-xl bg-card px-3 sm:px-4">
+          <AccordionTrigger className="hover:no-underline py-4 min-h-14">
+
             <div className="text-left flex items-center gap-2">
               <div>
                 <div className="font-semibold">1. Diagnosis Information</div>
