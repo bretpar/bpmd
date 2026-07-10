@@ -99,6 +99,15 @@ const AdminExerciseLibraryInner = () => {
   };
 
   const publish = async (item: LibraryExercise, nextStatus: Status) => {
+    if (nextStatus === "published") {
+      const r = readiness(item);
+      if (r.status !== "ready") {
+        const proceed = confirm(
+          `This exercise is only ${r.percent}% complete.\nStill missing: ${r.missing.join(", ")}.\n\nPublish anyway?`,
+        );
+        if (!proceed) return;
+      }
+    }
     const { error } = await sb.from("exercise_library").update({ status: nextStatus }).eq("id", item.id);
     if (error) return toast({ title: "Failed", description: error.message, variant: "destructive" });
     load();
