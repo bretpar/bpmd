@@ -27,6 +27,7 @@ import AdminPrograms from "./pages/AdminPrograms";
 import AdminProgramBuilder from "./pages/AdminProgramBuilder";
 import AdminProgramWizard from "./pages/AdminProgramWizard";
 import AdminProgramTemplates from "./pages/AdminProgramTemplates";
+import AdminDiagnosisEditor from "./pages/AdminDiagnosisEditor";
 import ProgramView, { ProgramWorkout } from "./pages/ProgramView";
 import NotFound from "./pages/NotFound";
 
