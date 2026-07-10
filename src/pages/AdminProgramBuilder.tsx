@@ -250,6 +250,7 @@ const Builder = () => {
               <Link to={`/programs/${meta.slug}`} target="_blank"><ExternalLink className="w-4 h-4 mr-1" />Preview</Link>
             </Button>
           )}
+          <Button variant="outline" onClick={saveAsTemplate}>Save as template</Button>
           <Button onClick={saveMeta}>Save program</Button>
         </div>
       </div>
@@ -273,6 +274,15 @@ const Builder = () => {
               </SelectContent>
             </Select>
           </div>
+        </div>
+        <div className="pt-3 border-t space-y-2">
+          <p className="text-sm font-medium">Pain & safety guidance</p>
+          <div><Label className="text-xs">Acceptable discomfort</Label>
+            <Textarea rows={2} value={meta.acceptable_discomfort ?? ""} onChange={(e) => setMeta({ ...meta, acceptable_discomfort: e.target.value })} /></div>
+          <div><Label className="text-xs">When to reduce or stop</Label>
+            <Textarea rows={2} value={meta.reduce_or_stop ?? ""} onChange={(e) => setMeta({ ...meta, reduce_or_stop: e.target.value })} /></div>
+          <div><Label className="text-xs">When to seek medical care</Label>
+            <Textarea rows={2} value={meta.seek_medical_care ?? ""} onChange={(e) => setMeta({ ...meta, seek_medical_care: e.target.value })} /></div>
         </div>
       </div>
 
