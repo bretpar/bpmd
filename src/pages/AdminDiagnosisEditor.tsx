@@ -154,9 +154,13 @@ const LibraryPickerDialog = ({
         </div>
         <div className="overflow-y-auto flex-1 -mx-6 px-6 divide-y divide-border">
           {filtered.map((e) => (
-            <button key={e.id} onClick={() => { onPick(e); onClose(); }} className="w-full text-left py-3 hover:bg-muted/50">
-              <div className="font-medium">{e.name}</div>
-              <div className="text-xs text-muted-foreground">{e.body_region || "—"} · {e.category || "—"}</div>
+            <button
+              key={e.id}
+              onClick={() => { onPick(e); onClose(); }}
+              className="w-full text-left py-4 min-h-14 hover:bg-muted/50 active:bg-muted"
+            >
+              <div className="font-medium leading-snug">{e.name}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">{e.body_region || "—"} · {e.category || "—"}</div>
             </button>
           ))}
           {filtered.length === 0 && <p className="text-center py-6 text-muted-foreground">No matches.</p>}
