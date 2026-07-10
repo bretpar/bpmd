@@ -452,19 +452,32 @@ const Inner = () => {
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 space-y-4">
-      <div className="flex items-center justify-between">
-        <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          to="/admin"
+          onClick={(e) => { if (!confirmLeave()) e.preventDefault(); }}
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
+        >
           <ArrowLeft className="w-4 h-4" /> Admin
         </Link>
-        <Button asChild variant="outline" size="sm">
-          <Link
-            to={`/exercise-library/region/${slugify(region || "")}/pathology/${pathology.slug}`}
-            target="_blank"
-          >
-            <ExternalLink className="w-4 h-4 mr-1" />Open patient page
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          {dirty && (
+            <span className="text-xs font-medium text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-2 py-0.5">
+              Unsaved changes
+            </span>
+          )}
+          <Button asChild variant="outline" size="sm">
+            <Link
+              to={`/exercise-library/region/${slugify(region || "")}/pathology/${pathology.slug}`}
+              target="_blank"
+              onClick={(e) => { if (!confirmLeave()) e.preventDefault(); }}
+            >
+              <ExternalLink className="w-4 h-4 mr-1" />Open patient page
+            </Link>
+          </Button>
+        </div>
       </div>
+
 
       <div>
         <p className="text-xs uppercase tracking-wide text-primary font-medium mb-1">Diagnosis</p>
