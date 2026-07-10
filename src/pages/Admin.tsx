@@ -327,6 +327,7 @@ const JointsAdmin = () => {
 const InjuriesAdmin = () => {
   const [items, setItems] = useState<Injury[]>([]);
   const [joints, setJoints] = useState<Joint[]>([]);
+  const [programs, setPrograms] = useState<{ id: string; name: string; status: string }[]>([]);
   const [exCounts, setExCounts] = useState<Record<string, number>>({});
   const [editing, setEditing] = useState<Injury | null>(null);
   const [q, setQ] = useState("");
@@ -334,12 +335,15 @@ const InjuriesAdmin = () => {
   const [activeFilter, setActiveFilter] = useState<string>("all");
 
   const load = async () => {
-    const [{ data: pData }, { data: jData }, { data: links }, { data: exLinks }] = await Promise.all([
+    const [{ data: pData }, { data: jData }, { data: links }, { data: exLinks }, { data: progs }] = await Promise.all([
       sb.from("pathologies").select("*").order("sort_order").order("name"),
       sb.from("body_locations").select("*").order("sort_order").order("name"),
       sb.from("pathology_locations").select("pathology_id, body_location_id"),
       sb.from("rehab_exercise_pathologies").select("pathology_id"),
+      sb.from("exercise_programs").select("id, name, status").order("name"),
     ]);
+    setPrograms(progs || []);
+
     const jointMap: Record<string, string[]> = {};
     (links || []).forEach((r: any) => {
       (jointMap[r.pathology_id] ||= []).push(r.body_location_id);
