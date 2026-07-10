@@ -73,6 +73,7 @@ const App = () => (
             <Route path="/admin/programs/new" element={<AdminProgramWizard />} />
             <Route path="/admin/programs/templates" element={<AdminProgramTemplates />} />
             <Route path="/admin/programs/:id" element={<AdminProgramBuilder />} />
+            <Route path="/admin/diagnoses/:id" element={<AdminDiagnosisEditor />} />
             <Route path="/programs/:slug" element={<ProgramView />} />
             <Route path="/programs/:slug/workout" element={<ProgramWorkout />} />
             <Route path="*" element={<NotFound />} />
