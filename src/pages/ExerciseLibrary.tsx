@@ -193,7 +193,7 @@ const DetailModal = ({ ex, onClose }: { ex: RehabExercise | null; onClose: () =>
   );
 };
 
-// ---------- Exercise Card (simple patient-friendly) ----------
+// ---------- Exercise Card (simple patient-friendly, collapsible Learn More) ----------
 const ExerciseCard = ({
   ex,
   onView,
@@ -202,6 +202,8 @@ const ExerciseCard = ({
   onView: (e: RehabExercise) => void;
 }) => {
   const details = splitExerciseDetails(ex);
+  const [open, setOpen] = useState(false);
+  const brief = (details.instructions || ex.description || "").split("\n")[0] || "";
 
   return (
     <Card className="flex flex-col h-full hover:shadow-md transition-shadow">
@@ -210,29 +212,40 @@ const ExerciseCard = ({
           <img src={ex.image_url} alt={ex.name} className="w-full h-full object-cover" loading="lazy" />
         </div>
       ) : null}
-      <CardContent className="p-5 flex-1 flex flex-col gap-3">
-        <h3 className="font-semibold text-lg text-foreground leading-snug">{ex.name}</h3>
-        {ex.description && (
-          <p className="text-sm text-muted-foreground line-clamp-3">{ex.description}</p>
+      <CardContent className="p-4 flex-1 flex flex-col gap-2">
+        <h3 className="font-semibold text-base text-foreground leading-snug">{ex.name}</h3>
+        {details.setsReps && (
+          <p className="text-sm font-medium text-primary">{details.setsReps}</p>
         )}
-        <div className="flex flex-wrap gap-1.5">
-          {ex.difficulty && (
-            <Badge variant="outline" className="capitalize">{ex.difficulty}</Badge>
-          )}
-          {details.equipment !== "None" && (
-            <Badge variant="secondary" className="font-normal">{details.equipment}</Badge>
-          )}
-          {details.setsReps && (
-            <Badge variant="secondary" className="font-normal">{details.setsReps}</Badge>
-          )}
+        {brief && (
+          <p className="text-sm text-muted-foreground line-clamp-2">{brief}</p>
+        )}
+        <div className="mt-auto pt-2 flex items-center justify-between">
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-0.5"
+          >
+            Learn more <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
+          </button>
+          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => onView(ex)}>
+            View Details
+          </Button>
         </div>
-        <Button variant="outline" size="sm" className="mt-auto" onClick={() => onView(ex)}>
-          View Details
-        </Button>
+        {open && (
+          <div className="pt-2 border-t border-border text-sm space-y-1.5">
+            {ex.description && <p className="text-muted-foreground">{ex.description}</p>}
+            <div className="flex flex-wrap gap-1.5">
+              {ex.difficulty && <Badge variant="outline" className="capitalize text-xs">{ex.difficulty}</Badge>}
+              {details.equipment !== "None" && <Badge variant="secondary" className="text-xs font-normal">{details.equipment}</Badge>}
+              {details.frequency && <Badge variant="secondary" className="text-xs font-normal">{details.frequency}</Badge>}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 };
+
 
 const ExerciseList = ({
   exercises,
@@ -605,8 +618,10 @@ const LibraryExerciseCard = ({
   onView: (ex: LibraryExercise, pe: PhaseExercise) => void;
 }) => {
   const ex = pe.exercise_library;
+  const [open, setOpen] = useState(false);
   if (!ex) return null;
   const dose = prescription(pe, ex);
+  const brief = (ex.instructions || "").split("\n")[0] || "";
   return (
     <Card className="flex flex-col h-full hover:shadow-md transition-shadow">
       {ex.image_url && (
@@ -614,22 +629,32 @@ const LibraryExerciseCard = ({
           <img src={ex.image_url} alt={ex.name} className="w-full h-full object-cover" loading="lazy" />
         </div>
       )}
-      <CardContent className="p-5 flex-1 flex flex-col gap-3">
+      <CardContent className="p-4 flex-1 flex flex-col gap-2">
         <h4 className="font-semibold text-base text-foreground leading-snug">{ex.name}</h4>
-        {ex.short_description && (
-          <p className="text-sm text-muted-foreground line-clamp-3">{ex.short_description}</p>
-        )}
-        <div className="flex flex-wrap gap-1.5">
-          {ex.difficulty && <Badge variant="outline" className="capitalize">{ex.difficulty}</Badge>}
-          {dose && <Badge variant="secondary" className="font-normal">{dose}</Badge>}
+        {dose && <p className="text-sm font-medium text-primary">{dose}</p>}
+        {brief && <p className="text-sm text-muted-foreground line-clamp-2">{brief}</p>}
+        <div className="mt-auto pt-2 flex items-center justify-between">
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-0.5"
+          >
+            Learn more <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
+          </button>
+          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => onView(ex, pe)}>
+            View Details
+          </Button>
         </div>
-        <Button variant="outline" size="sm" className="mt-auto" onClick={() => onView(ex, pe)}>
-          View Details
-        </Button>
+        {open && (
+          <div className="pt-2 border-t border-border text-sm space-y-1.5">
+            {ex.short_description && <p className="text-muted-foreground">{ex.short_description}</p>}
+            {ex.difficulty && <Badge variant="outline" className="capitalize text-xs">{ex.difficulty}</Badge>}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 };
+
 
 // Group rehab exercises into simple patient-friendly categories.
 const REHAB_GROUP_LABELS: Record<string, string> = {
@@ -739,20 +764,19 @@ export const RegionPathologyDetail = () => {
             {pathologyName}
           </h1>
 
-          {/* ---------- Recommended Recovery Program ---------- */}
+          {/* ---------- Start Here ---------- */}
           {program && program.program_phases.length > 0 && (
             <div className="mb-10 rounded-xl border border-border bg-card overflow-hidden">
               <div className="p-5 md:p-6 border-b border-border bg-muted/30">
                 <div className="flex items-center gap-2 mb-1">
                   <ListOrdered className="w-4 h-4 text-primary" />
                   <p className="text-xs uppercase tracking-wide text-primary font-medium">
-                    Recommended Recovery Program
+                    Start Here
                   </p>
                 </div>
                 <h2 className="text-xl md:text-2xl font-semibold text-foreground">{program.name}</h2>
                 <p className="text-sm text-muted-foreground mt-1.5">
-                  These exercises are presented in the order patients typically progress through rehabilitation.
-                  Expand any phase to see the exercises in detail.
+                  Start with these exercises. They are organized in the order patients typically progress through rehabilitation.
                 </p>
               </div>
 
@@ -764,16 +788,15 @@ export const RegionPathologyDetail = () => {
                         <div className="font-semibold text-foreground">
                           Phase {idx + 1} – {ph.title}
                         </div>
-                        {ph.phase_exercises.length > 0 && (
-                          <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                            {ph.phase_exercises
-                              .map((pe) => pe.exercise_library?.name)
-                              .filter(Boolean)
-                              .join(" · ")}
-                          </div>
+                        {ph.goal && (
+                          <div className="text-sm text-muted-foreground mt-0.5 line-clamp-1">{ph.goal}</div>
                         )}
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {ph.phase_exercises.length} exercise{ph.phase_exercises.length === 1 ? "" : "s"}
+                        </div>
                       </div>
                     </AccordionTrigger>
+
                     <AccordionContent>
                       {ph.goal && (
                         <p className="text-sm text-muted-foreground mb-4 px-1">{ph.goal}</p>
