@@ -528,6 +528,7 @@ export const RegionPathologyDetail = () => {
   const location = locations.find((l) => l.slug === slug);
   const displayName = location?.name || slug;
   const { data: exercises, loading } = useRehabExercises();
+  const [program, setProgram] = useState<any>(null);
 
   const list = useMemo(
     () => exercises.filter((e) => e.pathology_slugs.includes(pathologySlug)),
@@ -537,6 +538,25 @@ export const RegionPathologyDetail = () => {
   const pathologyName =
     list[0]?.pathology_names[list[0]?.pathology_slugs.indexOf(pathologySlug)] ||
     pathologySlug;
+
+  useEffect(() => {
+    (async () => {
+      const { data: p } = await (supabase as any)
+        .from("pathologies")
+        .select("exercise_program_id")
+        .eq("slug", pathologySlug)
+        .maybeSingle();
+      if (!p?.exercise_program_id) { setProgram(null); return; }
+      const { data: prog } = await (supabase as any)
+        .from("exercise_programs")
+        .select("id, slug, name, estimated_duration, intro_text, status, program_phases(id, title, estimated_workout_minutes, sort_order)")
+        .eq("id", p.exercise_program_id)
+        .eq("status", "published")
+        .maybeSingle();
+      setProgram(prog);
+    })();
+  }, [pathologySlug]);
+
 
   return (
     <Layout>
