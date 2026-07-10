@@ -586,14 +586,32 @@ export const RegionPathologyDetail = () => {
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
             {pathologyName}
           </h1>
+
+          {program && (
+            <div className="mb-6 p-5 rounded-xl border border-border bg-card">
+              <p className="text-xs uppercase tracking-wide text-primary mb-1">Exercise Program</p>
+              <h2 className="text-xl font-semibold">{program.name}</h2>
+              <div className="text-sm text-muted-foreground mt-1">
+                {program.program_phases?.length || 0} phase(s)
+                {program.program_phases?.[0]?.estimated_workout_minutes ? ` · ${program.program_phases[0].estimated_workout_minutes} min/workout` : ""}
+                {program.estimated_duration ? ` · ${program.estimated_duration}` : ""}
+              </div>
+              {program.program_phases?.[0] && (
+                <p className="text-sm text-muted-foreground mt-1">Starts with: {program.program_phases.sort((a: any, b: any) => a.sort_order - b.sort_order)[0].title}</p>
+              )}
+              <Button asChild className="mt-4"><Link to={`/programs/${program.slug}`}>View Exercise Program →</Link></Button>
+            </div>
+          )}
+
           {loading ? (
             <p className="text-center py-12 text-muted-foreground">Loading...</p>
-          ) : (
+          ) : program ? null : (
             <ExerciseList
               exercises={list}
               emptyMessage="Exercises for this condition are coming soon. Please ask your clinician for guidance."
             />
           )}
+
           <SafetyNote />
         </div>
       </section>
