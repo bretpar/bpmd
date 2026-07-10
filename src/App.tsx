@@ -74,7 +74,6 @@ const App = () => (
             <Route path="/admin/programs/:id" element={<AdminProgramBuilder />} />
             <Route path="/programs/:slug" element={<ProgramView />} />
             <Route path="/programs/:slug/workout" element={<ProgramWorkout />} />
-            <Route path="/programs/:slug/workout" element={<ProgramWorkout />} />
             <Route path="*" element={<NotFound />} />
 
           </Routes>
