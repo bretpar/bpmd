@@ -193,7 +193,7 @@ const DetailModal = ({ ex, onClose }: { ex: RehabExercise | null; onClose: () =>
   );
 };
 
-// ---------- Exercise Card (simple patient-friendly) ----------
+// ---------- Exercise Card (simple patient-friendly, collapsible Learn More) ----------
 const ExerciseCard = ({
   ex,
   onView,
@@ -202,6 +202,8 @@ const ExerciseCard = ({
   onView: (e: RehabExercise) => void;
 }) => {
   const details = splitExerciseDetails(ex);
+  const [open, setOpen] = useState(false);
+  const brief = (details.instructions || ex.description || "").split("\n")[0] || "";
 
   return (
     <Card className="flex flex-col h-full hover:shadow-md transition-shadow">
@@ -210,29 +212,40 @@ const ExerciseCard = ({
           <img src={ex.image_url} alt={ex.name} className="w-full h-full object-cover" loading="lazy" />
         </div>
       ) : null}
-      <CardContent className="p-5 flex-1 flex flex-col gap-3">
-        <h3 className="font-semibold text-lg text-foreground leading-snug">{ex.name}</h3>
-        {ex.description && (
-          <p className="text-sm text-muted-foreground line-clamp-3">{ex.description}</p>
+      <CardContent className="p-4 flex-1 flex flex-col gap-2">
+        <h3 className="font-semibold text-base text-foreground leading-snug">{ex.name}</h3>
+        {details.setsReps && (
+          <p className="text-sm font-medium text-primary">{details.setsReps}</p>
         )}
-        <div className="flex flex-wrap gap-1.5">
-          {ex.difficulty && (
-            <Badge variant="outline" className="capitalize">{ex.difficulty}</Badge>
-          )}
-          {details.equipment !== "None" && (
-            <Badge variant="secondary" className="font-normal">{details.equipment}</Badge>
-          )}
-          {details.setsReps && (
-            <Badge variant="secondary" className="font-normal">{details.setsReps}</Badge>
-          )}
+        {brief && (
+          <p className="text-sm text-muted-foreground line-clamp-2">{brief}</p>
+        )}
+        <div className="mt-auto pt-2 flex items-center justify-between">
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-0.5"
+          >
+            Learn more <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
+          </button>
+          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => onView(ex)}>
+            View Details
+          </Button>
         </div>
-        <Button variant="outline" size="sm" className="mt-auto" onClick={() => onView(ex)}>
-          View Details
-        </Button>
+        {open && (
+          <div className="pt-2 border-t border-border text-sm space-y-1.5">
+            {ex.description && <p className="text-muted-foreground">{ex.description}</p>}
+            <div className="flex flex-wrap gap-1.5">
+              {ex.difficulty && <Badge variant="outline" className="capitalize text-xs">{ex.difficulty}</Badge>}
+              {details.equipment !== "None" && <Badge variant="secondary" className="text-xs font-normal">{details.equipment}</Badge>}
+              {details.frequency && <Badge variant="secondary" className="text-xs font-normal">{details.frequency}</Badge>}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 };
+
 
 const ExerciseList = ({
   exercises,
