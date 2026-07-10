@@ -1,62 +1,267 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Layout from "@/components/Layout";
 import RequireAdmin from "@/components/RequireAdmin";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ExternalLink, ListOrdered, Plus, Search, X } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  ArrowLeft, ChevronUp, ChevronDown, ExternalLink, GripVertical, ListOrdered,
+  Plus, Search, Trash2,
+} from "lucide-react";
+import {
+  DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { slugify } from "@/lib/programTypes";
+import { prescription, slugify, type LibraryExercise, type PhaseExercise } from "@/lib/programTypes";
+import { useLibraryExercises } from "@/hooks/usePrograms";
 
 const sb = supabase as any;
 
+/* ============ Types ============ */
 type Pathology = {
   id: string;
   name: string;
   slug: string;
+  short_description: string | null;
+  full_description: string | null;
+  is_active: boolean;
   exercise_program_id: string | null;
   body_location_id: string | null;
 };
 
-type ProgramLite = { id: string; name: string; slug: string; status: string };
-
-type PhaseSummary = {
+type PhaseRow = {
   id: string;
   title: string;
+  goal: string | null;
   sort_order: number;
-  exercises: { id: string; name: string }[];
+  exercises: (PhaseExercise & { exercise_library: LibraryExercise | null })[];
 };
 
-type RehabEx = { id: string; title: string };
+type RehabEx = {
+  id: string;
+  title: string;
+  short_description: string | null;
+  rehab_phase: string | null;
+  image_url: string | null;
+};
 
+const REHAB_CATEGORIES: { key: string; label: string; matches: (r: RehabEx) => boolean }[] = [
+  { key: "early_rehab", label: "Mobility", matches: (r) => r.rehab_phase === "early_rehab" },
+  { key: "stretching", label: "Stretching", matches: (r) => /stretch/i.test(r.title) },
+  { key: "strengthening", label: "Strengthening", matches: (r) => r.rehab_phase === "strengthening" },
+  { key: "return_to_activity", label: "Advanced / Return to Sport", matches: (r) => r.rehab_phase === "return_to_activity" },
+  { key: "other", label: "More Exercises", matches: () => true },
+];
+
+const categorize = (list: RehabEx[]) => {
+  const buckets: Record<string, RehabEx[]> = {};
+  const claimed = new Set<string>();
+  for (const cat of REHAB_CATEGORIES) {
+    buckets[cat.key] = [];
+    for (const r of list) {
+      if (claimed.has(r.id)) continue;
+      if (cat.matches(r)) {
+        buckets[cat.key].push(r);
+        claimed.add(r.id);
+      }
+    }
+  }
+  return REHAB_CATEGORIES
+    .filter((c) => buckets[c.key].length > 0)
+    .map((c) => ({ ...c, items: buckets[c.key] }));
+};
+
+/* ============ Sortable phase-exercise row ============ */
+const SortableRow = ({
+  pe, onChange, onRemove,
+}: {
+  pe: PhaseExercise & { exercise_library: LibraryExercise | null };
+  onChange: (patch: Partial<PhaseExercise>) => void;
+  onRemove: () => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: pe.id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+  const ex = pe.exercise_library;
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-start gap-2 p-3 rounded-md border border-border bg-background">
+      <button className="cursor-grab pt-1 text-muted-foreground" {...attributes} {...listeners}>
+        <GripVertical className="w-4 h-4" />
+      </button>
+      <div className="flex-1 min-w-0 space-y-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-medium text-sm">{ex?.name || "(missing exercise)"}</span>
+          <span className="text-xs text-muted-foreground">{prescription(pe, ex ?? undefined)}</span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          <div>
+            <Label className="text-xs">Sets</Label>
+            <Input type="number" className="h-8" value={pe.override_sets ?? ""}
+              placeholder={ex?.default_sets?.toString() ?? "-"}
+              onChange={(e) => onChange({ override_sets: e.target.value ? Number(e.target.value) : null })} />
+          </div>
+          <div>
+            <Label className="text-xs">Reps</Label>
+            <Input type="number" className="h-8" value={pe.override_reps ?? ""}
+              placeholder={ex?.default_reps?.toString() ?? "-"}
+              onChange={(e) => onChange({ override_reps: e.target.value ? Number(e.target.value) : null })} />
+          </div>
+          <div>
+            <Label className="text-xs">Hold (s)</Label>
+            <Input type="number" className="h-8" value={pe.override_hold_seconds ?? ""}
+              placeholder={ex?.default_hold_seconds?.toString() ?? "-"}
+              onChange={(e) => onChange({ override_hold_seconds: e.target.value ? Number(e.target.value) : null })} />
+          </div>
+        </div>
+      </div>
+      <Button size="icon" variant="ghost" onClick={onRemove} aria-label="Remove"><Trash2 className="w-4 h-4" /></Button>
+    </div>
+  );
+};
+
+/* ============ Library picker dialog ============ */
+const LibraryPickerDialog = ({
+  open, onClose, onPick,
+}: { open: boolean; onClose: () => void; onPick: (e: LibraryExercise) => void }) => {
+  const { data } = useLibraryExercises(true);
+  const [q, setQ] = useState("");
+  const filtered = data.filter((e) => !q || e.name.toLowerCase().includes(q.toLowerCase()));
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogHeader><DialogTitle>Add exercise from library</DialogTitle></DialogHeader>
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input className="pl-8" placeholder="Search exercises..." value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
+        <div className="overflow-y-auto flex-1 -mx-6 px-6 divide-y divide-border">
+          {filtered.map((e) => (
+            <button key={e.id} onClick={() => { onPick(e); onClose(); }} className="w-full text-left py-3 hover:bg-muted/50">
+              <div className="font-medium">{e.name}</div>
+              <div className="text-xs text-muted-foreground">{e.body_region || "—"} · {e.category || "—"}</div>
+            </button>
+          ))}
+          {filtered.length === 0 && <p className="text-center py-6 text-muted-foreground">No matches.</p>}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+/* ============ Live patient preview (simplified) ============ */
+const LivePreview = ({
+  pathologyName, phases, assignedRehab,
+}: {
+  pathologyName: string;
+  phases: PhaseRow[];
+  assignedRehab: RehabEx[];
+}) => {
+  const grouped = useMemo(() => categorize(assignedRehab), [assignedRehab]);
+  return (
+    <div className="rounded-lg border border-border bg-muted/20 p-4 md:p-6">
+      <p className="text-xs text-muted-foreground mb-3">
+        Preview — this is what patients see on this diagnosis page.
+      </p>
+      <div className="rounded-xl border border-border bg-background overflow-hidden">
+        <div className="p-4 border-b bg-muted/30">
+          <p className="text-[10px] uppercase tracking-wide text-primary font-medium">Start Here</p>
+          <h3 className="text-lg font-semibold">{pathologyName}</h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            Start with these exercises. They are organized in the order patients typically progress through rehabilitation.
+          </p>
+        </div>
+        {phases.length === 0 ? (
+          <p className="p-4 text-sm text-muted-foreground">No phases yet.</p>
+        ) : (
+          <div className="divide-y">
+            {phases.map((ph, idx) => (
+              <div key={ph.id} className="p-4">
+                <div className="font-medium text-sm">Phase {idx + 1} – {ph.title}</div>
+                {ph.goal && <p className="text-xs text-muted-foreground mt-0.5">{ph.goal}</p>}
+                <p className="text-xs text-muted-foreground mt-1">
+                  {ph.exercises.length} exercise{ph.exercises.length === 1 ? "" : "s"}
+                </p>
+                <ul className="mt-2 text-sm text-foreground/80 list-disc pl-5 space-y-0.5">
+                  {ph.exercises.map((pe) => (
+                    <li key={pe.id}>{pe.exercise_library?.name || "(missing)"}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6">
+        <h3 className="text-base font-semibold mb-2">All Exercises</h3>
+        {assignedRehab.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No exercises assigned yet.</p>
+        ) : (
+          <div className="space-y-4">
+            {grouped.map((g) => (
+              <div key={g.key}>
+                <div className="text-xs font-semibold text-foreground mb-1.5 pb-1 border-b">
+                  {g.label} <span className="text-muted-foreground font-normal">({g.items.length})</span>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {g.items.map((r) => (
+                    <div key={r.id} className="rounded border border-border bg-background p-2 text-sm">
+                      {r.title}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ============ Main editor ============ */
 const Inner = () => {
   const { id = "" } = useParams();
   const nav = useNavigate();
 
   const [pathology, setPathology] = useState<Pathology | null>(null);
   const [region, setRegion] = useState<string>("");
-  const [programs, setPrograms] = useState<ProgramLite[]>([]);
-  const [phases, setPhases] = useState<PhaseSummary[]>([]);
+  const [phases, setPhases] = useState<PhaseRow[]>([]);
   const [allRehab, setAllRehab] = useState<RehabEx[]>([]);
-  const [assignedRehabIds, setAssignedRehabIds] = useState<string[]>([]);
-  const [pickerQ, setPickerQ] = useState("");
+  const [assignedIds, setAssignedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [addingPhaseId, setAddingPhaseId] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const load = async () => {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: p }, { data: progs }, { data: rex }, { data: links }] = await Promise.all([
-      sb.from("pathologies").select("id, name, slug, exercise_program_id, body_location_id").eq("id", id).maybeSingle(),
-      sb.from("exercise_programs").select("id, name, slug, status").order("name"),
-      sb.from("rehab_exercises").select("id, title").eq("is_active", true).order("title"),
+    const [{ data: p }, { data: rex }, { data: links }] = await Promise.all([
+      sb.from("pathologies")
+        .select("id, name, slug, short_description, full_description, is_active, exercise_program_id, body_location_id")
+        .eq("id", id).maybeSingle(),
+      sb.from("rehab_exercises").select("id, title, short_description, rehab_phase, image_url").eq("is_active", true).order("title"),
       sb.from("rehab_exercise_pathologies").select("exercise_id").eq("pathology_id", id),
     ]);
     setPathology(p);
-    setPrograms(progs || []);
     setAllRehab(rex || []);
-    setAssignedRehabIds((links || []).map((l: any) => l.exercise_id));
+    setAssignedIds((links || []).map((l: any) => l.exercise_id));
+
     if (p?.body_location_id) {
       const { data: loc } = await sb.from("body_locations").select("name").eq("id", p.body_location_id).maybeSingle();
       setRegion(loc?.name || "");
@@ -65,93 +270,154 @@ const Inner = () => {
     if (p?.exercise_program_id) {
       const { data: phs } = await sb
         .from("program_phases")
-        .select("id, title, sort_order, phase_exercises(id, sort_order, exercise_library(name))")
+        .select(`
+          id, title, goal, sort_order,
+          phase_exercises (
+            id, phase_id, exercise_id, sort_order,
+            override_sets, override_reps, override_hold_seconds,
+            override_duration, override_frequency, is_required,
+            exercise_library ( * )
+          )
+        `)
         .eq("program_id", p.exercise_program_id)
         .order("sort_order");
       setPhases(
         (phs || []).map((ph: any) => ({
-          id: ph.id,
-          title: ph.title,
-          sort_order: ph.sort_order,
-          exercises: (ph.phase_exercises || [])
-            .sort((a: any, b: any) => a.sort_order - b.sort_order)
-            .map((pe: any) => ({ id: pe.id, name: pe.exercise_library?.name || "(missing)" })),
+          id: ph.id, title: ph.title, goal: ph.goal, sort_order: ph.sort_order,
+          exercises: (ph.phase_exercises || []).sort((a: any, b: any) => a.sort_order - b.sort_order),
         }))
       );
     } else setPhases([]);
     setLoading(false);
+  }, [id]);
+
+  useEffect(() => { load(); }, [load, reloadKey]);
+
+  const refresh = () => setReloadKey((k) => k + 1);
+
+  /* --- Pathology info --- */
+  const saveInfo = async () => {
+    if (!pathology) return;
+    const { error } = await sb.from("pathologies").update({
+      name: pathology.name.trim(),
+      slug: pathology.slug?.trim() || slugify(pathology.name),
+      short_description: pathology.short_description || null,
+      full_description: pathology.full_description || null,
+      is_active: pathology.is_active,
+    }).eq("id", pathology.id);
+    if (error) return toast({ title: "Failed", description: error.message, variant: "destructive" });
+    toast({ title: "Diagnosis saved" });
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
-
-  const currentProgram = useMemo(
-    () => programs.find((p) => p.id === pathology?.exercise_program_id) || null,
-    [programs, pathology],
-  );
-
-  const linkProgram = async (programId: string | null) => {
-    if (!pathology) return;
-    await sb.from("pathologies").update({ exercise_program_id: programId }).eq("id", pathology.id);
-    toast({ title: programId ? "Program linked" : "Program unlinked" });
-    load();
-  };
-
-  const createProgram = async () => {
-    if (!pathology) return;
-    const name = `${pathology.name} Recovery Program`;
-    const slug = slugify(`${pathology.slug}-recovery`);
-    const { data: prog, error } = await sb
-      .from("exercise_programs")
-      .insert({
-        name, slug,
-        body_region: region || null,
-        condition: pathology.name,
-        status: "draft",
-      })
-      .select("id")
-      .single();
-    if (error || !prog) return toast({ title: "Could not create", description: error?.message, variant: "destructive" });
-    // Seed 3 phases
-    await sb.from("program_phases").insert(
-      [1, 2, 3].map((n) => ({
-        program_id: prog.id,
-        sort_order: n - 1,
-        title: `Phase ${n}`,
-      })),
-    );
+  /* --- Program / phase mgmt --- */
+  const ensureProgram = async (): Promise<string | null> => {
+    if (!pathology) return null;
+    if (pathology.exercise_program_id) return pathology.exercise_program_id;
+    const { data: prog, error } = await sb.from("exercise_programs").insert({
+      name: `${pathology.name} Recovery Program`,
+      slug: slugify(`${pathology.slug}-recovery`),
+      body_region: region || null,
+      condition: pathology.name,
+      status: "draft",
+    }).select("id").single();
+    if (error || !prog) { toast({ title: "Failed", description: error?.message, variant: "destructive" }); return null; }
     await sb.from("pathologies").update({ exercise_program_id: prog.id }).eq("id", pathology.id);
-    toast({ title: "Recovery program created" });
-    nav(`/admin/programs/${prog.id}`);
+    return prog.id;
   };
 
-  const toggleAdditional = async (exId: string) => {
+  const addPhase = async () => {
+    const progId = await ensureProgram();
+    if (!progId) return;
+    await sb.from("program_phases").insert({
+      program_id: progId, sort_order: phases.length, title: `Phase ${phases.length + 1}`,
+    });
+    refresh();
+  };
+
+  const updatePhase = async (phaseId: string, patch: Partial<PhaseRow>) => {
+    await sb.from("program_phases").update(patch).eq("id", phaseId);
+    refresh();
+  };
+
+  const deletePhase = async (phaseId: string) => {
+    if (!confirm("Delete this phase and all its exercises?")) return;
+    await sb.from("program_phases").delete().eq("id", phaseId);
+    refresh();
+  };
+
+  const movePhase = async (idx: number, dir: -1 | 1) => {
+    const j = idx + dir;
+    if (j < 0 || j >= phases.length) return;
+    const list = [...phases];
+    [list[idx], list[j]] = [list[j], list[idx]];
+    await Promise.all(list.map((p, i) => sb.from("program_phases").update({ sort_order: i }).eq("id", p.id)));
+    refresh();
+  };
+
+  const addExerciseToPhase = async (phaseId: string, ex: LibraryExercise) => {
+    const phase = phases.find((p) => p.id === phaseId);
+    const nextOrder = phase?.exercises.length ?? 0;
+    await sb.from("phase_exercises").insert({
+      phase_id: phaseId, exercise_id: ex.id, sort_order: nextOrder, is_required: true,
+    });
+    refresh();
+  };
+
+  const updateEx = async (peId: string, patch: any) => {
+    await sb.from("phase_exercises").update(patch).eq("id", peId);
+    refresh();
+  };
+
+  const removeEx = async (peId: string) => {
+    await sb.from("phase_exercises").delete().eq("id", peId);
+    refresh();
+  };
+
+  const reorderExercises = async (phaseId: string, oldIdx: number, newIdx: number) => {
+    const phase = phases.find((p) => p.id === phaseId);
+    if (!phase) return;
+    const list = arrayMove(phase.exercises, oldIdx, newIdx);
+    await Promise.all(list.map((e, i) => sb.from("phase_exercises").update({ sort_order: i }).eq("id", e.id)));
+    refresh();
+  };
+
+  /* --- All Exercises assignment --- */
+  const toggleAssigned = async (exId: string) => {
     if (!pathology) return;
-    if (assignedRehabIds.includes(exId)) {
+    if (assignedIds.includes(exId)) {
       await sb.from("rehab_exercise_pathologies").delete().eq("pathology_id", pathology.id).eq("exercise_id", exId);
     } else {
       await sb.from("rehab_exercise_pathologies").insert({ pathology_id: pathology.id, exercise_id: exId });
     }
-    load();
+    refresh();
   };
 
-  const assignedRehab = allRehab.filter((r) => assignedRehabIds.includes(r.id));
-  const pickerMatches = allRehab.filter(
-    (r) => !assignedRehabIds.includes(r.id) && r.title.toLowerCase().includes(pickerQ.toLowerCase()),
+  const assignedRehab = useMemo(
+    () => allRehab.filter((r) => assignedIds.includes(r.id)),
+    [allRehab, assignedIds],
   );
+
+  const grouped = useMemo(() => {
+    // For picker UX: show ALL exercises grouped, each with a checkbox reflecting assignment.
+    return categorize(allRehab);
+  }, [allRehab]);
 
   if (loading || !pathology) {
     return <div className="container mx-auto py-16 text-center text-muted-foreground">Loading...</div>;
   }
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-10 space-y-6">
+    <div className="container mx-auto max-w-5xl px-4 py-8 space-y-4">
       <div className="flex items-center justify-between">
         <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
           <ArrowLeft className="w-4 h-4" /> Admin
         </Link>
         <Button asChild variant="outline" size="sm">
-          <Link to={`/exercise-library/search?q=${encodeURIComponent(pathology.name)}`} target="_blank">
-            <ExternalLink className="w-4 h-4 mr-1" />View patient page
+          <Link
+            to={`/exercise-library/region/${slugify(region || "")}/pathology/${pathology.slug}`}
+            target="_blank"
+          >
+            <ExternalLink className="w-4 h-4 mr-1" />Open patient page
           </Link>
         </Button>
       </div>
@@ -162,123 +428,184 @@ const Inner = () => {
         {region && <p className="text-sm text-muted-foreground mt-1">{region}</p>}
       </div>
 
-      {/* Recommended Recovery Program */}
-      <div className="rounded-xl border border-border bg-card p-5 md:p-6 space-y-4">
-        <div className="flex items-center gap-2">
-          <ListOrdered className="w-4 h-4 text-primary" />
-          <h2 className="text-lg font-semibold">Recommended Recovery Program</h2>
-        </div>
+      <Accordion type="multiple" defaultValue={["info", "start-here", "all", "preview"]} className="space-y-3">
+        {/* ---------- 1. Diagnosis Information ---------- */}
+        <AccordionItem value="info" className="border rounded-xl bg-card px-4">
+          <AccordionTrigger className="hover:no-underline py-4">
+            <div className="text-left">
+              <div className="font-semibold">1. Diagnosis Information</div>
+              <div className="text-xs text-muted-foreground">Name, description, and visibility</div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-5 space-y-3">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div><Label>Name</Label>
+                <Input value={pathology.name}
+                  onChange={(e) => setPathology({ ...pathology, name: e.target.value })} />
+              </div>
+              <div><Label>Slug</Label>
+                <Input value={pathology.slug}
+                  onChange={(e) => setPathology({ ...pathology, slug: e.target.value })} />
+              </div>
+            </div>
+            <div><Label>Short description</Label>
+              <Input value={pathology.short_description ?? ""}
+                onChange={(e) => setPathology({ ...pathology, short_description: e.target.value })} />
+            </div>
+            <div><Label>Full description</Label>
+              <Textarea rows={4} value={pathology.full_description ?? ""}
+                onChange={(e) => setPathology({ ...pathology, full_description: e.target.value })} />
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch checked={pathology.is_active}
+                onCheckedChange={(v) => setPathology({ ...pathology, is_active: v })} />
+              <Label>Active</Label>
+            </div>
+            <div><Button onClick={saveInfo}>Save diagnosis info</Button></div>
+          </AccordionContent>
+        </AccordionItem>
 
-        {!currentProgram ? (
-          <div className="space-y-3">
+        {/* ---------- 2. Start Here ---------- */}
+        <AccordionItem value="start-here" className="border rounded-xl bg-card px-4">
+          <AccordionTrigger className="hover:no-underline py-4">
+            <div className="text-left flex-1 flex items-center gap-2">
+              <ListOrdered className="w-4 h-4 text-primary" />
+              <div>
+                <div className="font-semibold">2. Start Here <span className="text-xs font-normal text-muted-foreground">(Recommended Exercise Progression)</span></div>
+                <div className="text-xs text-muted-foreground">{phases.length} phase{phases.length === 1 ? "" : "s"}</div>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-5 space-y-3">
             <p className="text-sm text-muted-foreground">
-              No recovery program is linked yet. Create a new one for this diagnosis, or attach an existing program.
+              Organize the exercises patients should start with. Each phase is a collapsible list — drag rows to reorder.
             </p>
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={createProgram}>
-                <Plus className="w-4 h-4 mr-1" />Create Recovery Program
-              </Button>
-              <div className="flex-1 min-w-[220px]">
-                <Select value="" onValueChange={(v) => linkProgram(v)}>
-                  <SelectTrigger><SelectValue placeholder="Attach an existing program..." /></SelectTrigger>
-                  <SelectContent>
-                    {programs.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name} {p.status === "draft" ? "(draft)" : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+
+            <Accordion type="multiple" defaultValue={phases.map((p) => p.id)} className="space-y-2">
+              {phases.map((ph, idx) => (
+                <AccordionItem key={ph.id} value={ph.id} className="border rounded-lg bg-background px-3">
+                  <AccordionTrigger className="hover:no-underline py-3">
+                    <div className="flex-1 text-left flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground w-14">Phase {idx + 1}</span>
+                      <span className="font-medium">{ph.title}</span>
+                      <Badge variant="secondary" className="ml-1 text-xs">{ph.exercises.length}</Badge>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4 space-y-3">
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      <div><Label className="text-xs">Title</Label>
+                        <Input defaultValue={ph.title}
+                          onBlur={(e) => e.target.value !== ph.title && updatePhase(ph.id, { title: e.target.value })} />
+                      </div>
+                      <div className="flex items-end gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => movePhase(idx, -1)} disabled={idx === 0}><ChevronUp className="w-4 h-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => movePhase(idx, 1)} disabled={idx === phases.length - 1}><ChevronDown className="w-4 h-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => deletePhase(ph.id)}><Trash2 className="w-4 h-4" /></Button>
+                      </div>
+                    </div>
+                    <div><Label className="text-xs">Short description (optional)</Label>
+                      <Input defaultValue={ph.goal ?? ""}
+                        onBlur={(e) => updatePhase(ph.id, { goal: e.target.value || null })} />
+                    </div>
+
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={(e) => {
+                        const { active, over } = e;
+                        if (!over || active.id === over.id) return;
+                        const oldIdx = ph.exercises.findIndex((x) => x.id === active.id);
+                        const newIdx = ph.exercises.findIndex((x) => x.id === over.id);
+                        if (oldIdx >= 0 && newIdx >= 0) reorderExercises(ph.id, oldIdx, newIdx);
+                      }}
+                    >
+                      <SortableContext items={ph.exercises.map((e) => e.id)} strategy={verticalListSortingStrategy}>
+                        <div className="space-y-2">
+                          {ph.exercises.map((pe) => (
+                            <SortableRow key={pe.id} pe={pe}
+                              onChange={(patch) => updateEx(pe.id, patch)}
+                              onRemove={() => removeEx(pe.id)} />
+                          ))}
+                          {ph.exercises.length === 0 && (
+                            <p className="text-xs text-muted-foreground py-3 text-center border border-dashed rounded">
+                              No exercises yet.
+                            </p>
+                          )}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+
+                    <Button size="sm" variant="outline" onClick={() => setAddingPhaseId(ph.id)}>
+                      <Plus className="w-4 h-4 mr-1" />Add exercise from library
+                    </Button>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+
+            <Button size="sm" onClick={addPhase}>
+              <Plus className="w-4 h-4 mr-1" />Add phase
+            </Button>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* ---------- 3. All Exercises ---------- */}
+        <AccordionItem value="all" className="border rounded-xl bg-card px-4">
+          <AccordionTrigger className="hover:no-underline py-4">
+            <div className="text-left">
+              <div className="font-semibold">3. All Exercises</div>
+              <div className="text-xs text-muted-foreground">
+                {assignedRehab.length} selected · Choose everything shown on the patient page
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium">{currentProgram.name}</span>
-              <Badge variant={currentProgram.status === "published" ? "default" : "outline"}>
-                {currentProgram.status}
-              </Badge>
-              <div className="ml-auto flex gap-2">
-                <Button asChild size="sm">
-                  <Link to={`/admin/programs/${currentProgram.id}`}>Edit phases & exercises →</Link>
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => linkProgram(null)}>Unlink</Button>
+          </AccordionTrigger>
+          <AccordionContent className="pb-5 space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Check exercises to include them under <span className="font-medium">All Exercises</span> on the patient page.
+              The Start Here progression is a curated subset of this list.
+            </p>
+            {grouped.map((g) => (
+              <div key={g.key}>
+                <div className="text-sm font-semibold mb-2 pb-1 border-b border-border">
+                  {g.label}
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">{g.items.length}</span>
+                </div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
+                  {g.items.map((r) => {
+                    const on = assignedIds.includes(r.id);
+                    return (
+                      <label key={r.id}
+                        className={`flex items-start gap-2 p-2 rounded border cursor-pointer transition-colors ${on ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
+                        <input type="checkbox" className="mt-0.5" checked={on} onChange={() => toggleAssigned(r.id)} />
+                        <span className="text-sm leading-tight">{r.title}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-
-            {phases.length === 0 ? (
-              <p className="text-sm text-muted-foreground">This program has no phases yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {phases.map((ph, idx) => (
-                  <div key={ph.id} className="rounded-lg border border-border bg-background p-4">
-                    <div className="font-medium mb-1">Phase {idx + 1} – {ph.title}</div>
-                    {ph.exercises.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">No exercises yet.</p>
-                    ) : (
-                      <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-0.5">
-                        {ph.exercises.map((e) => <li key={e.id}>{e.name}</li>)}
-                      </ul>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Additional exercises */}
-      <div className="rounded-xl border border-border bg-card p-5 md:p-6 space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold">Additional Exercises</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            These appear under <span className="font-medium">All Exercises</span> on the patient page, even when not part of a phase.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-1.5 min-h-[2rem]">
-          {assignedRehab.length === 0 && (
-            <p className="text-xs text-muted-foreground">None assigned yet.</p>
-          )}
-          {assignedRehab.map((r) => (
-            <Badge key={r.id} variant="secondary" className="gap-1">
-              {r.title}
-              <button className="hover:text-destructive" onClick={() => toggleAdditional(r.id)}>
-                <X className="w-3 h-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            className="pl-8"
-            placeholder="Search library to add..."
-            value={pickerQ}
-            onChange={(e) => setPickerQ(e.target.value)}
-          />
-        </div>
-
-        {pickerQ && (
-          <div className="border rounded-md max-h-64 overflow-auto bg-popover">
-            {pickerMatches.slice(0, 40).map((r) => (
-              <button
-                key={r.id}
-                className="w-full text-left px-3 py-2 hover:bg-accent text-sm"
-                onClick={() => { toggleAdditional(r.id); setPickerQ(""); }}
-              >
-                {r.title}
-              </button>
             ))}
-            {pickerMatches.length === 0 && (
-              <p className="text-center text-xs text-muted-foreground py-3">No matches.</p>
-            )}
-          </div>
-        )}
-      </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* ---------- 4. Live Patient Preview ---------- */}
+        <AccordionItem value="preview" className="border rounded-xl bg-card px-4">
+          <AccordionTrigger className="hover:no-underline py-4">
+            <div className="text-left">
+              <div className="font-semibold">4. Live Patient Preview</div>
+              <div className="text-xs text-muted-foreground">Updates automatically as you edit above</div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-5">
+            <LivePreview pathologyName={pathology.name} phases={phases} assignedRehab={assignedRehab} />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      <LibraryPickerDialog
+        open={!!addingPhaseId}
+        onClose={() => setAddingPhaseId(null)}
+        onPick={(e) => addingPhaseId && addExerciseToPhase(addingPhaseId, e)}
+      />
     </div>
   );
 };
