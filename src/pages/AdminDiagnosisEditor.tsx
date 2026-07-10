@@ -96,36 +96,43 @@ const SortableRow = ({
   const ex = pe.exercise_library;
   return (
     <div ref={setNodeRef} style={style} className="flex items-start gap-2 p-3 rounded-md border border-border bg-background">
-      <button className="cursor-grab pt-1 text-muted-foreground" {...attributes} {...listeners}>
-        <GripVertical className="w-4 h-4" />
+      <button
+        className="cursor-grab touch-none text-muted-foreground flex items-center justify-center h-10 w-8 -ml-1 shrink-0"
+        aria-label="Drag to reorder"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="w-5 h-5" />
       </button>
       <div className="flex-1 min-w-0 space-y-2">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-sm">{ex?.name || "(missing exercise)"}</span>
           <span className="text-xs text-muted-foreground">{prescription(pe, ex ?? undefined)}</span>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <div>
             <Label className="text-xs">Sets</Label>
-            <Input type="number" className="h-8" value={pe.override_sets ?? ""}
+            <Input type="number" inputMode="numeric" className="h-10 sm:h-9" value={pe.override_sets ?? ""}
               placeholder={ex?.default_sets?.toString() ?? "-"}
               onChange={(e) => onChange({ override_sets: e.target.value ? Number(e.target.value) : null })} />
           </div>
           <div>
             <Label className="text-xs">Reps</Label>
-            <Input type="number" className="h-8" value={pe.override_reps ?? ""}
+            <Input type="number" inputMode="numeric" className="h-10 sm:h-9" value={pe.override_reps ?? ""}
               placeholder={ex?.default_reps?.toString() ?? "-"}
               onChange={(e) => onChange({ override_reps: e.target.value ? Number(e.target.value) : null })} />
           </div>
           <div>
             <Label className="text-xs">Hold (s)</Label>
-            <Input type="number" className="h-8" value={pe.override_hold_seconds ?? ""}
+            <Input type="number" inputMode="numeric" className="h-10 sm:h-9" value={pe.override_hold_seconds ?? ""}
               placeholder={ex?.default_hold_seconds?.toString() ?? "-"}
               onChange={(e) => onChange({ override_hold_seconds: e.target.value ? Number(e.target.value) : null })} />
           </div>
         </div>
       </div>
-      <Button size="icon" variant="ghost" onClick={onRemove} aria-label="Remove"><Trash2 className="w-4 h-4" /></Button>
+      <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" onClick={onRemove} aria-label="Remove">
+        <Trash2 className="w-5 h-5" />
+      </Button>
     </div>
   );
 };
@@ -147,9 +154,13 @@ const LibraryPickerDialog = ({
         </div>
         <div className="overflow-y-auto flex-1 -mx-6 px-6 divide-y divide-border">
           {filtered.map((e) => (
-            <button key={e.id} onClick={() => { onPick(e); onClose(); }} className="w-full text-left py-3 hover:bg-muted/50">
-              <div className="font-medium">{e.name}</div>
-              <div className="text-xs text-muted-foreground">{e.body_region || "—"} · {e.category || "—"}</div>
+            <button
+              key={e.id}
+              onClick={() => { onPick(e); onClose(); }}
+              className="w-full text-left py-4 min-h-14 hover:bg-muted/50 active:bg-muted"
+            >
+              <div className="font-medium leading-snug">{e.name}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">{e.body_region || "—"} · {e.category || "—"}</div>
             </button>
           ))}
           {filtered.length === 0 && <p className="text-center py-6 text-muted-foreground">No matches.</p>}
@@ -169,14 +180,14 @@ const LivePreview = ({
 }) => {
   const grouped = useMemo(() => categorize(assignedRehab), [assignedRehab]);
   return (
-    <div className="rounded-lg border border-border bg-muted/20 p-4 md:p-6">
+    <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-6">
       <p className="text-xs text-muted-foreground mb-3">
         Preview — this is what patients see on this diagnosis page.
       </p>
       <div className="rounded-xl border border-border bg-background overflow-hidden">
         <div className="p-4 border-b bg-muted/30">
           <p className="text-[10px] uppercase tracking-wide text-primary font-medium">Start Here</p>
-          <h3 className="text-lg font-semibold">{pathologyName}</h3>
+          <h3 className="text-lg font-semibold leading-tight">{pathologyName}</h3>
           <p className="text-xs text-muted-foreground mt-1">
             Start with these exercises. They are organized in the order patients typically progress through rehabilitation.
           </p>
@@ -187,14 +198,32 @@ const LivePreview = ({
           <div className="divide-y">
             {phases.map((ph, idx) => (
               <div key={ph.id} className="p-4">
-                <div className="font-medium text-sm">Phase {idx + 1} – {ph.title}</div>
-                {ph.goal && <p className="text-xs text-muted-foreground mt-0.5">{ph.goal}</p>}
-                <p className="text-xs text-muted-foreground mt-1">
+                <div className="font-medium text-sm leading-snug">
+                  <span className="text-muted-foreground mr-1">Phase {idx + 1}</span>
+                  {ph.title}
+                </div>
+                {ph.goal && <p className="text-xs text-muted-foreground mt-1">{ph.goal}</p>}
+                <p className="text-[11px] text-muted-foreground mt-1">
                   {ph.exercises.length} exercise{ph.exercises.length === 1 ? "" : "s"}
                 </p>
-                <ul className="mt-2 text-sm text-foreground/80 list-disc pl-5 space-y-0.5">
+                <ul className="mt-2 space-y-1.5">
                   {ph.exercises.map((pe) => (
-                    <li key={pe.id}>{pe.exercise_library?.name || "(missing)"}</li>
+                    <li
+                      key={pe.id}
+                      className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2 min-h-11 text-sm"
+                    >
+                      {pe.exercise_library?.image_url ? (
+                        <img
+                          src={pe.exercise_library.image_url}
+                          alt=""
+                          loading="lazy"
+                          className="w-10 h-10 rounded object-cover shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded bg-muted shrink-0" />
+                      )}
+                      <span className="leading-tight">{pe.exercise_library?.name || "(missing)"}</span>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -211,13 +240,21 @@ const LivePreview = ({
           <div className="space-y-4">
             {grouped.map((g) => (
               <div key={g.key}>
-                <div className="text-xs font-semibold text-foreground mb-1.5 pb-1 border-b">
+                <div className="text-xs font-semibold text-foreground mb-2 pb-1 border-b">
                   {g.label} <span className="text-muted-foreground font-normal">({g.items.length})</span>
                 </div>
-                <div className="grid sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {g.items.map((r) => (
-                    <div key={r.id} className="rounded border border-border bg-background p-2 text-sm">
-                      {r.title}
+                    <div
+                      key={r.id}
+                      className="flex items-center gap-3 rounded-md border border-border bg-background p-2 min-h-12 text-sm"
+                    >
+                      {r.image_url ? (
+                        <img src={r.image_url} alt="" loading="lazy" className="w-10 h-10 rounded object-cover shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 rounded bg-muted shrink-0" />
+                      )}
+                      <span className="leading-tight">{r.title}</span>
                     </div>
                   ))}
                 </div>
@@ -451,22 +488,22 @@ const Inner = () => {
   }
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8 space-y-4">
-      <div className="flex items-center justify-between gap-3">
+    <div className="container mx-auto max-w-5xl px-3 sm:px-4 py-6 sm:py-8 space-y-4">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <Link
           to="/admin"
           onClick={(e) => { if (!confirmLeave()) e.preventDefault(); }}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary min-h-11 py-2"
         >
           <ArrowLeft className="w-4 h-4" /> Admin
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {dirty && (
             <span className="text-xs font-medium text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-2 py-0.5">
               Unsaved changes
             </span>
           )}
-          <Button asChild variant="outline" size="sm">
+          <Button asChild variant="outline" size="sm" className="h-10">
             <Link
               to={`/exercise-library/region/${slugify(region || "")}/pathology/${pathology.slug}`}
               target="_blank"
@@ -481,14 +518,15 @@ const Inner = () => {
 
       <div>
         <p className="text-xs uppercase tracking-wide text-primary font-medium mb-1">Diagnosis</p>
-        <h1 className="text-3xl font-bold text-foreground">{pathology.name}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground break-words">{pathology.name}</h1>
         {region && <p className="text-sm text-muted-foreground mt-1">{region}</p>}
       </div>
 
       <Accordion type="multiple" defaultValue={["info", "start-here", "all", "preview"]} className="space-y-3">
         {/* ---------- 1. Diagnosis Information ---------- */}
-        <AccordionItem value="info" className="border rounded-xl bg-card px-4">
-          <AccordionTrigger className="hover:no-underline py-4">
+        <AccordionItem value="info" className="border rounded-xl bg-card px-3 sm:px-4">
+          <AccordionTrigger className="hover:no-underline py-4 min-h-14">
+
             <div className="text-left flex items-center gap-2">
               <div>
                 <div className="font-semibold">1. Diagnosis Information</div>
@@ -534,13 +572,16 @@ const Inner = () => {
         </AccordionItem>
 
         {/* ---------- 2. Start Here ---------- */}
-        <AccordionItem value="start-here" className="border rounded-xl bg-card px-4">
-          <AccordionTrigger className="hover:no-underline py-4">
-            <div className="text-left flex-1 flex items-center gap-2">
-              <ListOrdered className="w-4 h-4 text-primary" />
-              <div>
-                <div className="font-semibold">2. Start Here <span className="text-xs font-normal text-muted-foreground">(Recommended Exercise Progression)</span></div>
-                <div className="text-xs text-muted-foreground">{phases.length} phase{phases.length === 1 ? "" : "s"}</div>
+        <AccordionItem value="start-here" className="border rounded-xl bg-card px-3 sm:px-4">
+          <AccordionTrigger className="hover:no-underline py-4 min-h-14">
+            <div className="text-left flex-1 flex items-start gap-2">
+              <ListOrdered className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <div className="min-w-0">
+                <div className="font-semibold leading-tight">
+                  2. Start Here
+                  <span className="block sm:inline text-xs font-normal text-muted-foreground sm:ml-1">(Recommended Exercise Progression)</span>
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">{phases.length} phase{phases.length === 1 ? "" : "s"}</div>
               </div>
             </div>
           </AccordionTrigger>
@@ -552,29 +593,29 @@ const Inner = () => {
             <Accordion type="multiple" defaultValue={phases.map((p) => p.id)} className="space-y-2">
               {phases.map((ph, idx) => (
                 <AccordionItem key={ph.id} value={ph.id} className="border rounded-lg bg-background px-3">
-                  <AccordionTrigger className="hover:no-underline py-3">
-                    <div className="flex-1 text-left flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground w-14">Phase {idx + 1}</span>
-                      <span className="font-medium">{ph.title}</span>
-                      <Badge variant="secondary" className="ml-1 text-xs">{ph.exercises.length}</Badge>
+                  <AccordionTrigger className="hover:no-underline py-3 min-h-14">
+                    <div className="flex-1 text-left flex items-center gap-2 min-w-0">
+                      <span className="text-xs text-muted-foreground shrink-0">P{idx + 1}</span>
+                      <span className="font-medium truncate">{ph.title}</span>
+                      <Badge variant="secondary" className="ml-auto mr-2 text-xs shrink-0">{ph.exercises.length}</Badge>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="pb-4 space-y-3">
-                    <div className="grid sm:grid-cols-2 gap-2">
-                      <div><Label className="text-xs">Title</Label>
-                        <Input defaultValue={ph.title}
-                          onBlur={(e) => e.target.value !== ph.title && updatePhase(ph.id, { title: e.target.value })} />
-                      </div>
-                      <div className="flex items-end gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => movePhase(idx, -1)} disabled={idx === 0}><ChevronUp className="w-4 h-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => movePhase(idx, 1)} disabled={idx === phases.length - 1}><ChevronDown className="w-4 h-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => deletePhase(ph.id)}><Trash2 className="w-4 h-4" /></Button>
-                      </div>
+                    <div>
+                      <Label className="text-xs">Title</Label>
+                      <Input defaultValue={ph.title} className="h-10 sm:h-9"
+                        onBlur={(e) => e.target.value !== ph.title && updatePhase(ph.id, { title: e.target.value })} />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button size="icon" variant="ghost" className="h-10 w-10" onClick={() => movePhase(idx, -1)} disabled={idx === 0} aria-label="Move phase up"><ChevronUp className="w-5 h-5" /></Button>
+                      <Button size="icon" variant="ghost" className="h-10 w-10" onClick={() => movePhase(idx, 1)} disabled={idx === phases.length - 1} aria-label="Move phase down"><ChevronDown className="w-5 h-5" /></Button>
+                      <Button size="icon" variant="ghost" className="h-10 w-10 ml-auto text-destructive" onClick={() => deletePhase(ph.id)} aria-label="Delete phase"><Trash2 className="w-5 h-5" /></Button>
                     </div>
                     <div><Label className="text-xs">Short description (optional)</Label>
-                      <Input defaultValue={ph.goal ?? ""}
+                      <Input defaultValue={ph.goal ?? ""} className="h-10 sm:h-9"
                         onBlur={(e) => updatePhase(ph.id, { goal: e.target.value || null })} />
                     </div>
+
 
                     <DndContext
                       sensors={sensors}
@@ -603,7 +644,7 @@ const Inner = () => {
                       </SortableContext>
                     </DndContext>
 
-                    <Button size="sm" variant="outline" onClick={() => setAddingPhaseId(ph.id)}>
+                    <Button size="sm" variant="outline" className="h-10 w-full sm:w-auto" onClick={() => setAddingPhaseId(ph.id)}>
                       <Plus className="w-4 h-4 mr-1" />Add exercise from library
                     </Button>
                   </AccordionContent>
@@ -611,15 +652,15 @@ const Inner = () => {
               ))}
             </Accordion>
 
-            <Button size="sm" onClick={addPhase}>
+            <Button size="sm" className="h-10 w-full sm:w-auto" onClick={addPhase}>
               <Plus className="w-4 h-4 mr-1" />Add phase
             </Button>
           </AccordionContent>
         </AccordionItem>
 
         {/* ---------- 3. All Exercises ---------- */}
-        <AccordionItem value="all" className="border rounded-xl bg-card px-4">
-          <AccordionTrigger className="hover:no-underline py-4">
+        <AccordionItem value="all" className="border rounded-xl bg-card px-3 sm:px-4">
+          <AccordionTrigger className="hover:no-underline py-4 min-h-14">
             <div className="text-left">
               <div className="font-semibold">3. All Exercises</div>
               <div className="text-xs text-muted-foreground">
@@ -638,14 +679,14 @@ const Inner = () => {
                   {g.label}
                   <span className="ml-2 text-xs font-normal text-muted-foreground">{g.items.length}</span>
                 </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {g.items.map((r) => {
                     const on = assignedIds.includes(r.id);
                     return (
                       <label key={r.id}
-                        className={`flex items-start gap-2 p-2 rounded border cursor-pointer transition-colors ${on ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
-                        <input type="checkbox" className="mt-0.5" checked={on} onChange={() => toggleAssigned(r.id)} />
-                        <span className="text-sm leading-tight">{r.title}</span>
+                        className={`flex items-center gap-3 p-3 min-h-12 rounded-md border cursor-pointer transition-colors ${on ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
+                        <input type="checkbox" className="h-5 w-5 shrink-0" checked={on} onChange={() => toggleAssigned(r.id)} />
+                        <span className="text-sm leading-snug">{r.title}</span>
                       </label>
                     );
                   })}
@@ -656,8 +697,8 @@ const Inner = () => {
         </AccordionItem>
 
         {/* ---------- 4. Live Patient Preview ---------- */}
-        <AccordionItem value="preview" className="border rounded-xl bg-card px-4">
-          <AccordionTrigger className="hover:no-underline py-4">
+        <AccordionItem value="preview" className="border rounded-xl bg-card px-3 sm:px-4">
+          <AccordionTrigger className="hover:no-underline py-4 min-h-14">
             <div className="text-left">
               <div className="font-semibold">4. Live Patient Preview</div>
               <div className="text-xs text-muted-foreground">Updates automatically as you edit above</div>
@@ -667,6 +708,7 @@ const Inner = () => {
             <LivePreview pathologyName={pathology.name} phases={phases} assignedRehab={assignedRehab} />
           </AccordionContent>
         </AccordionItem>
+
       </Accordion>
 
       <LibraryPickerDialog
