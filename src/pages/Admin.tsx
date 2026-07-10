@@ -377,9 +377,11 @@ const InjuriesAdmin = () => {
       full_description: editing.full_description || null,
       is_active: editing.is_active,
       sort_order: editing.sort_order ?? 0,
+      exercise_program_id: editing.exercise_program_id || null,
     };
     // Keep legacy body_location_id in sync with first selected joint
     payload.body_location_id = editing.joint_ids[0] || null;
+
 
     let id = editing.id;
     if (id) {
