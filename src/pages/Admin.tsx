@@ -513,6 +513,15 @@ const InjuriesAdmin = () => {
                 </Select>
               </Field>
 
+              {editing.id && (
+                <a
+                  href={`/admin/diagnoses/${editing.id}`}
+                  className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                >
+                  Manage phases & additional exercises →
+                </a>
+              )}
+
               <div className="grid sm:grid-cols-2 gap-4">
                 <Field label="Sort order">
                   <Input type="number" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} />
