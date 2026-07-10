@@ -8,15 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   ChevronRight,
   Search,
-  
   Home as HomeIcon,
   Activity,
   Sparkles,
+  ListOrdered,
 } from "lucide-react";
-import { RehabExercise, useRehabExercises } from "@/hooks/useRehabExercises";
+import { RehabExercise, useRehabExercises, REHAB_PHASE_ORDER } from "@/hooks/useRehabExercises";
+import { prescription, type LibraryExercise, type PhaseExercise } from "@/lib/programTypes";
 
 const PATIENT_EXERCISES_LABEL = "Patient Exercises";
 const PATIENT_SAFETY_GUIDANCE =
