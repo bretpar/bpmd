@@ -873,8 +873,13 @@ const Admin = () => {
                 <h1 className="text-3xl font-bold">Admin Dashboard</h1>
                 <p className="text-sm text-muted-foreground">Signed in as {user?.email}</p>
               </div>
-              <Button variant="outline" onClick={signOut}><LogOut className="w-4 h-4 mr-2" />Sign out</Button>
+              <div className="flex gap-2 flex-wrap">
+                <Button asChild variant="outline"><a href="/admin/exercise-library">Exercise Library</a></Button>
+                <Button asChild variant="outline"><a href="/admin/programs">Programs</a></Button>
+                <Button variant="outline" onClick={signOut}><LogOut className="w-4 h-4 mr-2" />Sign out</Button>
+              </div>
             </div>
+
 
             <Tabs defaultValue="joints">
               <TabsList className="flex flex-wrap h-auto">
