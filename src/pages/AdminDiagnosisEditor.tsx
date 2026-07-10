@@ -285,7 +285,20 @@ const Inner = () => {
       sb.from("rehab_exercises").select("id, title, short_description, rehab_phase, image_url").eq("is_active", true).order("title"),
       sb.from("rehab_exercise_pathologies").select("exercise_id").eq("pathology_id", id),
     ]);
-    setPathology(p);
+    // Preserve unsaved edits to Diagnosis Information if the user is mid-edit
+    // (other panels refresh() after their own auto-saves).
+    const local = localPathologyRef.current;
+    if (dirtyRef.current && local && p && local.id === p.id) {
+      // Merge server-side fields we don't edit here, keep local edits for the form fields.
+      setPathology({
+        ...local,
+        exercise_program_id: p.exercise_program_id,
+        body_location_id: p.body_location_id,
+      });
+    } else {
+      setPathology(p);
+    }
+    setSavedPathology(p);
     setAllRehab(rex || []);
     setAssignedIds((links || []).map((l: any) => l.exercise_id));
 
