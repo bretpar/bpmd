@@ -65,7 +65,13 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/exercise-library-admin" element={<ExerciseLibraryAdmin />} />
+            <Route path="/admin/exercise-library" element={<AdminExerciseLibrary />} />
+            <Route path="/admin/programs" element={<AdminPrograms />} />
+            <Route path="/admin/programs/:id" element={<AdminProgramBuilder />} />
+            <Route path="/programs/:slug" element={<ProgramView />} />
+            <Route path="/programs/:slug/workout" element={<ProgramWorkout />} />
             <Route path="*" element={<NotFound />} />
+
           </Routes>
         </AuthProvider>
       </BrowserRouter>
