@@ -22,7 +22,12 @@ import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import ExerciseLibraryAdmin from "./pages/ExerciseLibraryAdmin";
+import AdminExerciseLibrary from "./pages/AdminExerciseLibrary";
+import AdminPrograms from "./pages/AdminPrograms";
+import AdminProgramBuilder from "./pages/AdminProgramBuilder";
+import ProgramView, { ProgramWorkout } from "./pages/ProgramView";
 import NotFound from "./pages/NotFound";
+
 import ScrollToTop from "./components/ScrollToTop";
 import Analytics from "./components/Analytics";
 
@@ -60,7 +65,13 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/exercise-library-admin" element={<ExerciseLibraryAdmin />} />
+            <Route path="/admin/exercise-library" element={<AdminExerciseLibrary />} />
+            <Route path="/admin/programs" element={<AdminPrograms />} />
+            <Route path="/admin/programs/:id" element={<AdminProgramBuilder />} />
+            <Route path="/programs/:slug" element={<ProgramView />} />
+            <Route path="/programs/:slug/workout" element={<ProgramWorkout />} />
             <Route path="*" element={<NotFound />} />
+
           </Routes>
         </AuthProvider>
       </BrowserRouter>

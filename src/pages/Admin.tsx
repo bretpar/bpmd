@@ -52,7 +52,9 @@ type Injury = {
   is_active: boolean;
   sort_order: number;
   joint_ids: string[];
+  exercise_program_id: string | null;
 };
+
 
 type RehabExercise = {
   id: string;
@@ -325,6 +327,7 @@ const JointsAdmin = () => {
 const InjuriesAdmin = () => {
   const [items, setItems] = useState<Injury[]>([]);
   const [joints, setJoints] = useState<Joint[]>([]);
+  const [programs, setPrograms] = useState<{ id: string; name: string; status: string }[]>([]);
   const [exCounts, setExCounts] = useState<Record<string, number>>({});
   const [editing, setEditing] = useState<Injury | null>(null);
   const [q, setQ] = useState("");
@@ -332,12 +335,15 @@ const InjuriesAdmin = () => {
   const [activeFilter, setActiveFilter] = useState<string>("all");
 
   const load = async () => {
-    const [{ data: pData }, { data: jData }, { data: links }, { data: exLinks }] = await Promise.all([
+    const [{ data: pData }, { data: jData }, { data: links }, { data: exLinks }, { data: progs }] = await Promise.all([
       sb.from("pathologies").select("*").order("sort_order").order("name"),
       sb.from("body_locations").select("*").order("sort_order").order("name"),
       sb.from("pathology_locations").select("pathology_id, body_location_id"),
       sb.from("rehab_exercise_pathologies").select("pathology_id"),
+      sb.from("exercise_programs").select("id, name, status").order("name"),
     ]);
+    setPrograms(progs || []);
+
     const jointMap: Record<string, string[]> = {};
     (links || []).forEach((r: any) => {
       (jointMap[r.pathology_id] ||= []).push(r.body_location_id);
@@ -352,9 +358,11 @@ const InjuriesAdmin = () => {
         is_active: p.is_active ?? true,
         sort_order: p.sort_order ?? 0,
         joint_ids: jointMap[p.id] || [],
+        exercise_program_id: p.exercise_program_id ?? null,
       }))
     );
     setJoints(jData || []);
+
     const ec: Record<string, number> = {};
     (exLinks || []).forEach((r: any) => {
       ec[r.pathology_id] = (ec[r.pathology_id] || 0) + 1;
@@ -373,9 +381,11 @@ const InjuriesAdmin = () => {
       full_description: editing.full_description || null,
       is_active: editing.is_active,
       sort_order: editing.sort_order ?? 0,
+      exercise_program_id: editing.exercise_program_id || null,
     };
     // Keep legacy body_location_id in sync with first selected joint
     payload.body_location_id = editing.joint_ids[0] || null;
+
 
     let id = editing.id;
     if (id) {
@@ -434,7 +444,7 @@ const InjuriesAdmin = () => {
             <SelectItem value="inactive">Inactive only</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={() => setEditing({ id: "", name: "", slug: "", short_description: "", full_description: "", is_active: true, sort_order: items.length, joint_ids: [] })}>
+        <Button onClick={() => setEditing({ id: "", name: "", slug: "", short_description: "", full_description: "", is_active: true, sort_order: items.length, joint_ids: [], exercise_program_id: null })}>
           <Plus className="w-4 h-4 mr-2" />New Injury
         </Button>
       </div>
@@ -488,6 +498,21 @@ const InjuriesAdmin = () => {
                   placeholder="Search joints..."
                 />
               </Field>
+              <Field label="Attached Exercise Program (optional)">
+                <Select
+                  value={editing.exercise_program_id ?? "none"}
+                  onValueChange={(v) => setEditing({ ...editing, exercise_program_id: v === "none" ? null : v })}
+                >
+                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— None —</SelectItem>
+                    {programs.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name} {p.status === "draft" ? "(draft)" : ""}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+
               <div className="grid sm:grid-cols-2 gap-4">
                 <Field label="Sort order">
                   <Input type="number" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} />
@@ -873,8 +898,13 @@ const Admin = () => {
                 <h1 className="text-3xl font-bold">Admin Dashboard</h1>
                 <p className="text-sm text-muted-foreground">Signed in as {user?.email}</p>
               </div>
-              <Button variant="outline" onClick={signOut}><LogOut className="w-4 h-4 mr-2" />Sign out</Button>
+              <div className="flex gap-2 flex-wrap">
+                <Button asChild variant="outline"><a href="/admin/exercise-library">Exercise Library</a></Button>
+                <Button asChild variant="outline"><a href="/admin/programs">Programs</a></Button>
+                <Button variant="outline" onClick={signOut}><LogOut className="w-4 h-4 mr-2" />Sign out</Button>
+              </div>
             </div>
+
 
             <Tabs defaultValue="joints">
               <TabsList className="flex flex-wrap h-auto">

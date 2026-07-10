@@ -528,6 +528,7 @@ export const RegionPathologyDetail = () => {
   const location = locations.find((l) => l.slug === slug);
   const displayName = location?.name || slug;
   const { data: exercises, loading } = useRehabExercises();
+  const [program, setProgram] = useState<any>(null);
 
   const list = useMemo(
     () => exercises.filter((e) => e.pathology_slugs.includes(pathologySlug)),
@@ -537,6 +538,25 @@ export const RegionPathologyDetail = () => {
   const pathologyName =
     list[0]?.pathology_names[list[0]?.pathology_slugs.indexOf(pathologySlug)] ||
     pathologySlug;
+
+  useEffect(() => {
+    (async () => {
+      const { data: p } = await (supabase as any)
+        .from("pathologies")
+        .select("exercise_program_id")
+        .eq("slug", pathologySlug)
+        .maybeSingle();
+      if (!p?.exercise_program_id) { setProgram(null); return; }
+      const { data: prog } = await (supabase as any)
+        .from("exercise_programs")
+        .select("id, slug, name, estimated_duration, intro_text, status, program_phases(id, title, estimated_workout_minutes, sort_order)")
+        .eq("id", p.exercise_program_id)
+        .eq("status", "published")
+        .maybeSingle();
+      setProgram(prog);
+    })();
+  }, [pathologySlug]);
+
 
   return (
     <Layout>
@@ -566,14 +586,32 @@ export const RegionPathologyDetail = () => {
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
             {pathologyName}
           </h1>
+
+          {program && (
+            <div className="mb-6 p-5 rounded-xl border border-border bg-card">
+              <p className="text-xs uppercase tracking-wide text-primary mb-1">Exercise Program</p>
+              <h2 className="text-xl font-semibold">{program.name}</h2>
+              <div className="text-sm text-muted-foreground mt-1">
+                {program.program_phases?.length || 0} phase(s)
+                {program.program_phases?.[0]?.estimated_workout_minutes ? ` · ${program.program_phases[0].estimated_workout_minutes} min/workout` : ""}
+                {program.estimated_duration ? ` · ${program.estimated_duration}` : ""}
+              </div>
+              {program.program_phases?.[0] && (
+                <p className="text-sm text-muted-foreground mt-1">Starts with: {program.program_phases.sort((a: any, b: any) => a.sort_order - b.sort_order)[0].title}</p>
+              )}
+              <Button asChild className="mt-4"><Link to={`/programs/${program.slug}`}>View Exercise Program →</Link></Button>
+            </div>
+          )}
+
           {loading ? (
             <p className="text-center py-12 text-muted-foreground">Loading...</p>
-          ) : (
+          ) : program ? null : (
             <ExerciseList
               exercises={list}
               emptyMessage="Exercises for this condition are coming soon. Please ask your clinician for guidance."
             />
           )}
+
           <SafetyNote />
         </div>
       </section>
