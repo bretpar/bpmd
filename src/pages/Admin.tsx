@@ -436,7 +436,7 @@ const InjuriesAdmin = () => {
             <SelectItem value="inactive">Inactive only</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={() => setEditing({ id: "", name: "", slug: "", short_description: "", full_description: "", is_active: true, sort_order: items.length, joint_ids: [] })}>
+        <Button onClick={() => setEditing({ id: "", name: "", slug: "", short_description: "", full_description: "", is_active: true, sort_order: items.length, joint_ids: [], exercise_program_id: null })}>
           <Plus className="w-4 h-4 mr-2" />New Injury
         </Button>
       </div>
