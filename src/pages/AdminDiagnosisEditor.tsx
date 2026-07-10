@@ -568,13 +568,16 @@ const Inner = () => {
         </AccordionItem>
 
         {/* ---------- 2. Start Here ---------- */}
-        <AccordionItem value="start-here" className="border rounded-xl bg-card px-4">
-          <AccordionTrigger className="hover:no-underline py-4">
-            <div className="text-left flex-1 flex items-center gap-2">
-              <ListOrdered className="w-4 h-4 text-primary" />
-              <div>
-                <div className="font-semibold">2. Start Here <span className="text-xs font-normal text-muted-foreground">(Recommended Exercise Progression)</span></div>
-                <div className="text-xs text-muted-foreground">{phases.length} phase{phases.length === 1 ? "" : "s"}</div>
+        <AccordionItem value="start-here" className="border rounded-xl bg-card px-3 sm:px-4">
+          <AccordionTrigger className="hover:no-underline py-4 min-h-14">
+            <div className="text-left flex-1 flex items-start gap-2">
+              <ListOrdered className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <div className="min-w-0">
+                <div className="font-semibold leading-tight">
+                  2. Start Here
+                  <span className="block sm:inline text-xs font-normal text-muted-foreground sm:ml-1">(Recommended Exercise Progression)</span>
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">{phases.length} phase{phases.length === 1 ? "" : "s"}</div>
               </div>
             </div>
           </AccordionTrigger>
@@ -586,29 +589,29 @@ const Inner = () => {
             <Accordion type="multiple" defaultValue={phases.map((p) => p.id)} className="space-y-2">
               {phases.map((ph, idx) => (
                 <AccordionItem key={ph.id} value={ph.id} className="border rounded-lg bg-background px-3">
-                  <AccordionTrigger className="hover:no-underline py-3">
-                    <div className="flex-1 text-left flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground w-14">Phase {idx + 1}</span>
-                      <span className="font-medium">{ph.title}</span>
-                      <Badge variant="secondary" className="ml-1 text-xs">{ph.exercises.length}</Badge>
+                  <AccordionTrigger className="hover:no-underline py-3 min-h-14">
+                    <div className="flex-1 text-left flex items-center gap-2 min-w-0">
+                      <span className="text-xs text-muted-foreground shrink-0">P{idx + 1}</span>
+                      <span className="font-medium truncate">{ph.title}</span>
+                      <Badge variant="secondary" className="ml-auto mr-2 text-xs shrink-0">{ph.exercises.length}</Badge>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="pb-4 space-y-3">
-                    <div className="grid sm:grid-cols-2 gap-2">
-                      <div><Label className="text-xs">Title</Label>
-                        <Input defaultValue={ph.title}
-                          onBlur={(e) => e.target.value !== ph.title && updatePhase(ph.id, { title: e.target.value })} />
-                      </div>
-                      <div className="flex items-end gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => movePhase(idx, -1)} disabled={idx === 0}><ChevronUp className="w-4 h-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => movePhase(idx, 1)} disabled={idx === phases.length - 1}><ChevronDown className="w-4 h-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => deletePhase(ph.id)}><Trash2 className="w-4 h-4" /></Button>
-                      </div>
+                    <div>
+                      <Label className="text-xs">Title</Label>
+                      <Input defaultValue={ph.title} className="h-10 sm:h-9"
+                        onBlur={(e) => e.target.value !== ph.title && updatePhase(ph.id, { title: e.target.value })} />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button size="icon" variant="ghost" className="h-10 w-10" onClick={() => movePhase(idx, -1)} disabled={idx === 0} aria-label="Move phase up"><ChevronUp className="w-5 h-5" /></Button>
+                      <Button size="icon" variant="ghost" className="h-10 w-10" onClick={() => movePhase(idx, 1)} disabled={idx === phases.length - 1} aria-label="Move phase down"><ChevronDown className="w-5 h-5" /></Button>
+                      <Button size="icon" variant="ghost" className="h-10 w-10 ml-auto text-destructive" onClick={() => deletePhase(ph.id)} aria-label="Delete phase"><Trash2 className="w-5 h-5" /></Button>
                     </div>
                     <div><Label className="text-xs">Short description (optional)</Label>
-                      <Input defaultValue={ph.goal ?? ""}
+                      <Input defaultValue={ph.goal ?? ""} className="h-10 sm:h-9"
                         onBlur={(e) => updatePhase(ph.id, { goal: e.target.value || null })} />
                     </div>
+
 
                     <DndContext
                       sensors={sensors}
