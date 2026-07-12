@@ -683,6 +683,25 @@ const Inner = () => {
               Check exercises to include them under <span className="font-medium">All Exercises</span> on the patient page.
               The Start Here progression is a curated subset of this list.
             </p>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-9 h-12 text-base"
+                placeholder="Search exercises..."
+                value={allExercisesQuery}
+                onChange={(e) => setAllExercisesQuery(e.target.value)}
+                autoComplete="off"
+              />
+              {allExercisesQuery && (
+                <button
+                  type="button"
+                  onClick={() => setAllExercisesQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
             {grouped.map((g) => (
               <div key={g.key}>
                 <div className="text-sm font-semibold mb-2 pb-1 border-b border-border">
