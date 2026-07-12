@@ -860,7 +860,10 @@ export const RegionPathologyDetail = () => {
             </div>
 
             {loading ? (
-              <p className="text-center py-12 text-muted-foreground">Loading...</p>
+              <CardGridSkeleton count={6} />
+            ) : isError ? (
+              <RetryBox onRetry={() => refetch()} />
+
             ) : list.length === 0 ? (
               <div className="text-center py-16 border border-dashed border-border rounded-lg">
                 <Activity className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
