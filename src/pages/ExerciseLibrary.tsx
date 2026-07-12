@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import SEO from "@/components/SEO";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
@@ -17,8 +17,20 @@ import {
   Sparkles,
   ListOrdered,
 } from "lucide-react";
-import { RehabExercise, useRehabExercises, REHAB_PHASE_ORDER } from "@/hooks/useRehabExercises";
+import { RehabExercise, REHAB_PHASE_ORDER } from "@/hooks/useRehabExercises";
+import {
+  useBodyLocations,
+  useBodyLocationBySlug,
+  usePathologiesForLocation,
+  usePathologyBySlug,
+  useExercisesForLocation,
+  useExercisesForPathology,
+  usePathologyProgram,
+  useAllRehabExercises,
+  usePrefetchRegion,
+} from "@/hooks/useExerciseLibraryData";
 import { prescription, type LibraryExercise, type PhaseExercise } from "@/lib/programTypes";
+
 
 const PATIENT_EXERCISES_LABEL = "Patient Exercises";
 const PATIENT_SAFETY_GUIDANCE =
