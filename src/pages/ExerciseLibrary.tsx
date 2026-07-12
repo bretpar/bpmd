@@ -532,17 +532,18 @@ export const RegionDetail = () => {
 // ---------- General Exercises list for a joint ----------
 export const RegionGeneralDetail = () => {
   const { slug = "" } = useParams();
-  const { items: locations } = useBodyLocations();
-  const location = locations.find((l) => l.slug === slug);
+  const { data: location } = useBodyLocationBySlug(slug);
   const displayName = location?.name || slug;
-  const { data: exercises, loading } = useRehabExercises();
+  const {
+    data: exercises = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useExercisesForLocation(location?.id);
 
   const list = useMemo(
-    () =>
-      exercises.filter(
-        (e) => e.is_general_exercise && e.location_slugs.includes(slug)
-      ),
-    [exercises, slug]
+    () => exercises.filter((e) => e.is_general_exercise),
+    [exercises]
   );
 
   return (
@@ -576,8 +577,10 @@ export const RegionGeneralDetail = () => {
           <p className="text-muted-foreground text-base mb-6">
             Foundational mobility, stretching, and strengthening routines for the {displayName.toLowerCase()}.
           </p>
-          {loading ? (
-            <p className="text-center py-12 text-muted-foreground">Loading...</p>
+          {isLoading ? (
+            <CardGridSkeleton count={6} />
+          ) : isError ? (
+            <RetryBox onRetry={() => refetch()} />
           ) : (
             <ExerciseList
               exercises={list}
@@ -590,6 +593,7 @@ export const RegionGeneralDetail = () => {
     </Layout>
   );
 };
+
 
 // ---------- Library-exercise renderers (for Recommended Recovery Program) ----------
 type FullProgramShape = {
