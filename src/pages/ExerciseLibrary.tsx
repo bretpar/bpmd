@@ -910,7 +910,7 @@ export const RegionPathologyDetail = () => {
 
 // ---------- Search ----------
 export const ExerciseSearch = () => {
-  const { data: exercises, loading } = useRehabExercises();
+  const { data: exercises = [], isLoading: loading, isError, refetch } = useAllRehabExercises();
   const params = new URLSearchParams(window.location.search);
   const initialQ = params.get("q") || "";
   const [q, setQ] = useState(initialQ);
