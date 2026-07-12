@@ -674,7 +674,7 @@ const Inner = () => {
             <div className="text-left">
               <div className="font-semibold">3. All Exercises</div>
               <div className="text-xs text-muted-foreground">
-                {assignedRehab.length} selected · Choose everything shown on the patient page
+                {assignedRehab.length} selected{allExercisesQuery ? ` · ${filteredCount} match${filteredCount === 1 ? "" : "es"}` : ""} · Choose everything shown on the patient page
               </div>
             </div>
           </AccordionTrigger>
