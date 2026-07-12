@@ -416,19 +416,29 @@ export const ExerciseLibraryHome = () => {
 // ---------- Joint (Region) Detail: General + Pathology cards ----------
 export const RegionDetail = () => {
   const { slug = "" } = useParams();
-  const { items: locations } = useBodyLocations();
-  const location = locations.find((l) => l.slug === slug);
-  const pathologies = usePathologiesForLocation(location?.id || null);
-  const { data: exercises, loading } = useRehabExercises();
+  const { data: location, isLoading: locLoading, isError: locError, refetch: refetchLoc } =
+    useBodyLocationBySlug(slug);
+  const {
+    data: pathologies = [],
+    isLoading: pathLoading,
+    isError: pathError,
+    refetch: refetchPath,
+  } = usePathologiesForLocation(location?.id);
+  const {
+    data: exercises = [],
+    isLoading: exLoading,
+    isError: exError,
+    refetch: refetchEx,
+  } = useExercisesForLocation(location?.id);
 
   const displayName = location?.name || slug;
   const generalExercises = useMemo(
-    () =>
-      exercises.filter(
-        (e) => e.is_general_exercise && e.location_slugs.includes(slug)
-      ),
-    [exercises, slug]
+    () => exercises.filter((e) => e.is_general_exercise),
+    [exercises]
   );
+
+  const loading = locLoading || pathLoading || exLoading;
+  const isError = locError || pathError || exError;
 
   return (
     <Layout>
@@ -463,7 +473,17 @@ export const RegionDetail = () => {
 
 
           {loading ? (
-            <p className="text-center py-12 text-muted-foreground">Loading...</p>
+            <div className="mb-8"><RowSkeletonList count={4} /></div>
+          ) : isError ? (
+            <div className="mb-8">
+              <RetryBox
+                onRetry={() => {
+                  refetchLoc();
+                  refetchPath();
+                  refetchEx();
+                }}
+              />
+            </div>
           ) : (
             <div className="space-y-3 mb-8">
               {generalExercises.length > 0 && (
@@ -507,6 +527,7 @@ export const RegionDetail = () => {
     </Layout>
   );
 };
+
 
 // ---------- General Exercises list for a joint ----------
 export const RegionGeneralDetail = () => {
