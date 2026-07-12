@@ -403,7 +403,12 @@ const Inner = () => {
   const [loading, setLoading] = useState(true);
   const [addingPhaseId, setAddingPhaseId] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [allExercisesQuery, setAllExercisesQuery] = useState("");
+  const [allExercisesQuery, setAllExercisesQuery] = useState(() => {
+    try { return localStorage.getItem("admin_diagnosis_exercise_search") || ""; } catch { return ""; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("admin_diagnosis_exercise_search", allExercisesQuery); } catch {}
+  }, [allExercisesQuery]);
 
   const dirty = useMemo(
     () => !!pathology && !!savedPathology &&
