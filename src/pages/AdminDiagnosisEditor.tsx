@@ -281,6 +281,7 @@ const Inner = () => {
   const [loading, setLoading] = useState(true);
   const [addingPhaseId, setAddingPhaseId] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [allExercisesQuery, setAllExercisesQuery] = useState("");
 
   const dirty = useMemo(
     () => !!pathology && !!savedPathology &&
@@ -480,8 +481,17 @@ const Inner = () => {
 
   const grouped = useMemo(() => {
     // For picker UX: show ALL exercises grouped, each with a checkbox reflecting assignment.
-    return categorize(allRehab);
-  }, [allRehab]);
+    const q = allExercisesQuery.trim().toLowerCase();
+    let list = allRehab;
+    if (q) list = list.filter((r) => r.title.toLowerCase().includes(q));
+    return categorize(list);
+  }, [allRehab, allExercisesQuery]);
+
+  const filteredCount = useMemo(
+    () => grouped.reduce((sum, g) => sum + g.items.length, 0),
+    [grouped],
+  );
+
 
   if (loading || !pathology) {
     return <div className="container mx-auto py-16 text-center text-muted-foreground">Loading...</div>;
