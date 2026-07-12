@@ -76,14 +76,22 @@ const RowCard = ({
   emphasized,
   icon,
   subtitle,
+  onHoverPrefetch,
 }: {
   to: string;
   title: string;
   emphasized?: boolean;
   icon?: React.ReactNode;
   subtitle?: string;
+  onHoverPrefetch?: () => void;
 }) => (
-  <Link to={to} className="block">
+  <Link
+    to={to}
+    className="block"
+    onMouseEnter={onHoverPrefetch}
+    onFocus={onHoverPrefetch}
+    onTouchStart={onHoverPrefetch}
+  >
     <Card
       className={`hover:shadow-md transition-all cursor-pointer ${
         emphasized ? "border-primary/50 hover:border-primary" : "hover:border-primary/40"
@@ -112,6 +120,7 @@ const RowCard = ({
     </Card>
   </Link>
 );
+
 
 // ---------- Exercise Detail Modal ----------
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
