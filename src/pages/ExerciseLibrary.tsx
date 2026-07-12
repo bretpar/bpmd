@@ -369,8 +369,10 @@ export const ExerciseLibraryHome = () => {
             </p>
           </div>
 
-          {loading ? (
-            <p className="text-center py-12 text-muted-foreground">Loading...</p>
+          {isLoading ? (
+            <div className="mb-8"><RowSkeletonList count={6} /></div>
+          ) : isError ? (
+            <div className="mb-8"><RetryBox onRetry={() => refetch()} /></div>
           ) : (
             <div className="space-y-3 mb-8">
               {locations.map((loc) => (
@@ -378,10 +380,12 @@ export const ExerciseLibraryHome = () => {
                   key={loc.id}
                   to={`/exercise-library/region/${loc.slug}`}
                   title={loc.name}
+                  onHoverPrefetch={() => prefetchRegion(loc.slug)}
                 />
               ))}
             </div>
           )}
+
 
           <form onSubmit={onSearch} className="relative mb-8">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
