@@ -287,37 +287,44 @@ const ExerciseList = ({
   );
 };
 
-// ---------- Body Locations + Pathologies fetch ----------
-const useBodyLocations = () => {
-  const [items, setItems] = useState<{ id: string; slug: string; name: string }[]>([]);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    (supabase as any)
-      .from("body_locations")
-      .select("id, slug, name")
-      .order("sort_order")
-      .order("name")
-      .then(({ data }: any) => {
-        setItems(data || []);
-        setLoading(false);
-      });
-  }, []);
-  return { items, loading };
-};
+// ---------- Small loading skeletons ----------
+const RowSkeleton = () => (
+  <div className="rounded-lg border border-border bg-card p-5 flex items-center gap-3">
+    <Skeleton className="w-10 h-10 rounded-lg" />
+    <Skeleton className="h-4 flex-1 max-w-[60%]" />
+  </div>
+);
+const RowSkeletonList = ({ count = 5 }: { count?: number }) => (
+  <div className="space-y-3">
+    {Array.from({ length: count }).map((_, i) => (
+      <RowSkeleton key={i} />
+    ))}
+  </div>
+);
+const CardSkeleton = () => (
+  <div className="rounded-lg border border-border bg-card overflow-hidden">
+    <Skeleton className="aspect-video w-full rounded-none" />
+    <div className="p-4 space-y-2">
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-3 w-1/2" />
+      <Skeleton className="h-3 w-full" />
+    </div>
+  </div>
+);
+const CardGridSkeleton = ({ count = 6 }: { count?: number }) => (
+  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    {Array.from({ length: count }).map((_, i) => (
+      <CardSkeleton key={i} />
+    ))}
+  </div>
+);
+const RetryBox = ({ onRetry }: { onRetry: () => void }) => (
+  <div className="text-center py-12 border border-dashed border-border rounded-lg">
+    <p className="text-muted-foreground mb-3">We couldn't load this content. Please try again.</p>
+    <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
+  </div>
+);
 
-const usePathologiesForLocation = (locationId: string | null) => {
-  const [items, setItems] = useState<{ id: string; slug: string; name: string }[]>([]);
-  useEffect(() => {
-    if (!locationId) return;
-    (supabase as any)
-      .from("pathologies")
-      .select("id, slug, name")
-      .eq("body_location_id", locationId)
-      .order("name")
-      .then(({ data }: any) => setItems(data || []));
-  }, [locationId]);
-  return items;
-};
 
 // ---------- Main Library Home: "What joint hurts?" ----------
 export const ExerciseLibraryHome = () => {
