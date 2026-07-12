@@ -330,12 +330,14 @@ const RetryBox = ({ onRetry }: { onRetry: () => void }) => (
 export const ExerciseLibraryHome = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const { items: locations, loading } = useBodyLocations();
+  const { data: locations = [], isLoading, isError, refetch } = useBodyLocations();
+  const prefetchRegion = usePrefetchRegion();
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (search.trim()) navigate(`/exercise-library/search?q=${encodeURIComponent(search.trim())}`);
   };
+
 
   return (
     <Layout>
