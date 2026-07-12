@@ -281,6 +281,7 @@ const Inner = () => {
   const [loading, setLoading] = useState(true);
   const [addingPhaseId, setAddingPhaseId] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [allExercisesQuery, setAllExercisesQuery] = useState("");
 
   const dirty = useMemo(
     () => !!pathology && !!savedPathology &&
@@ -480,8 +481,17 @@ const Inner = () => {
 
   const grouped = useMemo(() => {
     // For picker UX: show ALL exercises grouped, each with a checkbox reflecting assignment.
-    return categorize(allRehab);
-  }, [allRehab]);
+    const q = allExercisesQuery.trim().toLowerCase();
+    let list = allRehab;
+    if (q) list = list.filter((r) => r.title.toLowerCase().includes(q));
+    return categorize(list);
+  }, [allRehab, allExercisesQuery]);
+
+  const filteredCount = useMemo(
+    () => grouped.reduce((sum, g) => sum + g.items.length, 0),
+    [grouped],
+  );
+
 
   if (loading || !pathology) {
     return <div className="container mx-auto py-16 text-center text-muted-foreground">Loading...</div>;
@@ -664,7 +674,7 @@ const Inner = () => {
             <div className="text-left">
               <div className="font-semibold">3. All Exercises</div>
               <div className="text-xs text-muted-foreground">
-                {assignedRehab.length} selected · Choose everything shown on the patient page
+                {assignedRehab.length} selected{allExercisesQuery ? ` · ${filteredCount} match${filteredCount === 1 ? "" : "es"}` : ""} · Choose everything shown on the patient page
               </div>
             </div>
           </AccordionTrigger>
@@ -673,6 +683,25 @@ const Inner = () => {
               Check exercises to include them under <span className="font-medium">All Exercises</span> on the patient page.
               The Start Here progression is a curated subset of this list.
             </p>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-9 h-12 text-base"
+                placeholder="Search exercises..."
+                value={allExercisesQuery}
+                onChange={(e) => setAllExercisesQuery(e.target.value)}
+                autoComplete="off"
+              />
+              {allExercisesQuery && (
+                <button
+                  type="button"
+                  onClick={() => setAllExercisesQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
             {grouped.map((g) => (
               <div key={g.key}>
                 <div className="text-sm font-semibold mb-2 pb-1 border-b border-border">
