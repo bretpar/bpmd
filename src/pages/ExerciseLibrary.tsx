@@ -740,59 +740,29 @@ const groupRehabExercises = (list: RehabExercise[]) => {
 
 export const RegionPathologyDetail = () => {
   const { slug = "", pathologySlug = "" } = useParams();
-  const { items: locations } = useBodyLocations();
-  const location = locations.find((l) => l.slug === slug);
+  const { data: location } = useBodyLocationBySlug(slug);
   const displayName = location?.name || slug;
-  const { data: exercises, loading } = useRehabExercises();
-  const [program, setProgram] = useState<FullProgramShape | null>(null);
+  const { data: pathology } = usePathologyBySlug(pathologySlug);
+  const {
+    data: exercises = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useExercisesForPathology(pathology?.id);
+  const { data: program = null } = usePathologyProgram(pathologySlug);
   const [activeLib, setActiveLib] = useState<{ ex: LibraryExercise; pe?: PhaseExercise } | null>(null);
   const [activeRehab, setActiveRehab] = useState<RehabExercise | null>(null);
 
-  const list = useMemo(
-    () => exercises.filter((e) => e.pathology_slugs.includes(pathologySlug)),
-    [exercises, pathologySlug]
-  );
+  const list = exercises;
 
   const pathologyName =
+    pathology?.name ||
     list[0]?.pathology_names[list[0]?.pathology_slugs.indexOf(pathologySlug)] ||
     pathologySlug;
 
-  useEffect(() => {
-    (async () => {
-      const { data: p } = await (supabase as any)
-        .from("pathologies")
-        .select("exercise_program_id")
-        .eq("slug", pathologySlug)
-        .maybeSingle();
-      if (!p?.exercise_program_id) { setProgram(null); return; }
-      const { data: prog } = await (supabase as any)
-        .from("exercise_programs")
-        .select(`
-          id, slug, name, intro_text, estimated_duration, status,
-          program_phases (
-            id, title, sort_order, goal, estimated_workout_minutes,
-            phase_exercises (
-              id, phase_id, exercise_id, sort_order,
-              override_sets, override_reps, override_hold_seconds,
-              override_duration, override_frequency, is_required,
-              exercise_library ( * )
-            )
-          )
-        `)
-        .eq("id", p.exercise_program_id)
-        .eq("status", "published")
-        .maybeSingle();
-      if (!prog) { setProgram(null); return; }
-      // Sort nested arrays defensively.
-      prog.program_phases = (prog.program_phases || []).sort((a: any, b: any) => a.sort_order - b.sort_order);
-      prog.program_phases.forEach((ph: any) => {
-        ph.phase_exercises = (ph.phase_exercises || []).sort((a: any, b: any) => a.sort_order - b.sort_order);
-      });
-      setProgram(prog);
-    })();
-  }, [pathologySlug]);
-
   const grouped = useMemo(() => groupRehabExercises(list), [list]);
+  const loading = isLoading;
+
 
   return (
     <Layout>
