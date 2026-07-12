@@ -175,6 +175,111 @@ const LibraryPickerDialog = ({
   );
 };
 
+/* ============ Quick detail view for preview cards ============ */
+type DetailExercise = {
+  title: string;
+  description: string | null;
+  instructions: string | null;
+  image_url: string | null;
+  video_url: string | null;
+  equipment: string | null;
+  precautions: string | null;
+};
+
+const LibraryExerciseDetail = ({
+  ex,
+  onClose,
+}: {
+  ex: DetailExercise | null;
+  onClose: () => void;
+}) => {
+  if (!ex) return null;
+  return (
+    <Dialog open={!!ex} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader>
+          <DialogTitle className="text-xl sm:text-2xl leading-tight">{ex.title}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 text-sm">
+          {ex.image_url ? (
+            <img
+              src={ex.image_url}
+              alt={`${ex.title} demonstration`}
+              loading="lazy"
+              className="w-full rounded-lg object-cover"
+            />
+          ) : !ex.video_url ? (
+            <div className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground">
+              Image/video coming soon.
+            </div>
+          ) : null}
+          {ex.video_url && (
+            <div>
+              <h4 className="font-semibold text-foreground mb-1">Video</h4>
+              <a
+                href={ex.video_url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary hover:underline break-all"
+              >
+                {ex.video_url}
+              </a>
+            </div>
+          )}
+          {ex.description && (
+            <div>
+              <h4 className="font-semibold text-foreground mb-1">Why this helps</h4>
+              <p className="text-foreground/80 whitespace-pre-line">{ex.description}</p>
+            </div>
+          )}
+          {ex.instructions && (
+            <div>
+              <h4 className="font-semibold text-foreground mb-1">How to do it</h4>
+              <p className="text-foreground/80 whitespace-pre-line">{ex.instructions}</p>
+            </div>
+          )}
+          {(ex.equipment || ex.precautions) && (
+            <div className="grid sm:grid-cols-2 gap-3">
+              {ex.equipment && (
+                <div>
+                  <h4 className="font-semibold text-foreground mb-1">Equipment</h4>
+                  <p className="text-foreground/80">{ex.equipment}</p>
+                </div>
+              )}
+              {ex.precautions && (
+                <div>
+                  <h4 className="font-semibold text-foreground mb-1">Precautions</h4>
+                  <p className="text-foreground/80 whitespace-pre-line">{ex.precautions}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const toDetail = (ex: LibraryExercise): DetailExercise => ({
+  title: ex.name,
+  description: ex.short_description,
+  instructions: ex.instructions,
+  image_url: ex.image_url,
+  video_url: ex.video_url,
+  equipment: ex.equipment,
+  precautions: ex.safety_notes,
+});
+
+const toRehabDetail = (ex: RehabEx): DetailExercise => ({
+  title: ex.title,
+  description: ex.short_description,
+  instructions: ex.full_instructions,
+  image_url: ex.image_url,
+  video_url: ex.video_url,
+  equipment: ex.equipment_needed,
+  precautions: ex.precautions,
+});
+
 /* ============ Live patient preview (simplified) ============ */
 const LivePreview = ({
   pathologyName, phases, assignedRehab,
@@ -184,6 +289,8 @@ const LivePreview = ({
   assignedRehab: RehabEx[];
 }) => {
   const grouped = useMemo(() => categorize(assignedRehab), [assignedRehab]);
+  const [active, setActive] = useState<DetailExercise | null>(null);
+
   return (
     <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-6">
       <p className="text-xs text-muted-foreground mb-3">
@@ -215,7 +322,11 @@ const LivePreview = ({
                   {ph.exercises.map((pe) => (
                     <li
                       key={pe.id}
-                      className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2 min-h-11 text-sm"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => pe.exercise_library && setActive(toDetail(pe.exercise_library))}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") pe.exercise_library && setActive(toDetail(pe.exercise_library)); }}
+                      className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2 min-h-11 text-sm cursor-pointer hover:bg-muted/40 transition-colors"
                     >
                       {pe.exercise_library?.image_url ? (
                         <img
@@ -252,7 +363,11 @@ const LivePreview = ({
                   {g.items.map((r) => (
                     <div
                       key={r.id}
-                      className="flex items-center gap-3 rounded-md border border-border bg-background p-2 min-h-12 text-sm"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setActive(toRehabDetail(r))}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setActive(toRehabDetail(r)); }}
+                      className="flex items-center gap-3 rounded-md border border-border bg-background p-2 min-h-12 text-sm cursor-pointer hover:bg-muted/40 transition-colors"
                     >
                       {r.image_url ? (
                         <img src={r.image_url} alt="" loading="lazy" className="w-10 h-10 rounded object-cover shrink-0" />
@@ -268,6 +383,8 @@ const LivePreview = ({
           </div>
         )}
       </div>
+
+      <LibraryExerciseDetail ex={active} onClose={() => setActive(null)} />
     </div>
   );
 };
