@@ -969,13 +969,16 @@ export const ExerciseSearch = () => {
             />
           </div>
           {loading ? (
-            <p className="text-center py-12 text-muted-foreground">Loading...</p>
+            <CardGridSkeleton count={6} />
+          ) : isError ? (
+            <RetryBox onRetry={() => refetch()} />
           ) : (
             <ExerciseList
               exercises={filtered}
               emptyMessage="No exercises match your search."
             />
           )}
+
         </div>
       </section>
     </Layout>
