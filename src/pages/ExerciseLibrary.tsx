@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import SEO from "@/components/SEO";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
@@ -17,8 +17,20 @@ import {
   Sparkles,
   ListOrdered,
 } from "lucide-react";
-import { RehabExercise, useRehabExercises, REHAB_PHASE_ORDER } from "@/hooks/useRehabExercises";
+import { RehabExercise, REHAB_PHASE_ORDER } from "@/hooks/useRehabExercises";
+import {
+  useBodyLocations,
+  useBodyLocationBySlug,
+  usePathologiesForLocation,
+  usePathologyBySlug,
+  useExercisesForLocation,
+  useExercisesForPathology,
+  usePathologyProgram,
+  useAllRehabExercises,
+  usePrefetchRegion,
+} from "@/hooks/useExerciseLibraryData";
 import { prescription, type LibraryExercise, type PhaseExercise } from "@/lib/programTypes";
+
 
 const PATIENT_EXERCISES_LABEL = "Patient Exercises";
 const PATIENT_SAFETY_GUIDANCE =
@@ -64,14 +76,22 @@ const RowCard = ({
   emphasized,
   icon,
   subtitle,
+  onHoverPrefetch,
 }: {
   to: string;
   title: string;
   emphasized?: boolean;
   icon?: React.ReactNode;
   subtitle?: string;
+  onHoverPrefetch?: () => void;
 }) => (
-  <Link to={to} className="block">
+  <Link
+    to={to}
+    className="block"
+    onMouseEnter={onHoverPrefetch}
+    onFocus={onHoverPrefetch}
+    onTouchStart={onHoverPrefetch}
+  >
     <Card
       className={`hover:shadow-md transition-all cursor-pointer ${
         emphasized ? "border-primary/50 hover:border-primary" : "hover:border-primary/40"
@@ -100,6 +120,7 @@ const RowCard = ({
     </Card>
   </Link>
 );
+
 
 // ---------- Exercise Detail Modal ----------
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -275,48 +296,57 @@ const ExerciseList = ({
   );
 };
 
-// ---------- Body Locations + Pathologies fetch ----------
-const useBodyLocations = () => {
-  const [items, setItems] = useState<{ id: string; slug: string; name: string }[]>([]);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    (supabase as any)
-      .from("body_locations")
-      .select("id, slug, name")
-      .order("sort_order")
-      .order("name")
-      .then(({ data }: any) => {
-        setItems(data || []);
-        setLoading(false);
-      });
-  }, []);
-  return { items, loading };
-};
+// ---------- Small loading skeletons ----------
+const RowSkeleton = () => (
+  <div className="rounded-lg border border-border bg-card p-5 flex items-center gap-3">
+    <Skeleton className="w-10 h-10 rounded-lg" />
+    <Skeleton className="h-4 flex-1 max-w-[60%]" />
+  </div>
+);
+const RowSkeletonList = ({ count = 5 }: { count?: number }) => (
+  <div className="space-y-3">
+    {Array.from({ length: count }).map((_, i) => (
+      <RowSkeleton key={i} />
+    ))}
+  </div>
+);
+const CardSkeleton = () => (
+  <div className="rounded-lg border border-border bg-card overflow-hidden">
+    <Skeleton className="aspect-video w-full rounded-none" />
+    <div className="p-4 space-y-2">
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-3 w-1/2" />
+      <Skeleton className="h-3 w-full" />
+    </div>
+  </div>
+);
+const CardGridSkeleton = ({ count = 6 }: { count?: number }) => (
+  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    {Array.from({ length: count }).map((_, i) => (
+      <CardSkeleton key={i} />
+    ))}
+  </div>
+);
+const RetryBox = ({ onRetry }: { onRetry: () => void }) => (
+  <div className="text-center py-12 border border-dashed border-border rounded-lg">
+    <p className="text-muted-foreground mb-3">We couldn't load this content. Please try again.</p>
+    <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
+  </div>
+);
 
-const usePathologiesForLocation = (locationId: string | null) => {
-  const [items, setItems] = useState<{ id: string; slug: string; name: string }[]>([]);
-  useEffect(() => {
-    if (!locationId) return;
-    (supabase as any)
-      .from("pathologies")
-      .select("id, slug, name")
-      .eq("body_location_id", locationId)
-      .order("name")
-      .then(({ data }: any) => setItems(data || []));
-  }, [locationId]);
-  return items;
-};
 
 // ---------- Main Library Home: "What joint hurts?" ----------
 export const ExerciseLibraryHome = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const { items: locations, loading } = useBodyLocations();
+  const { data: locations = [], isLoading, isError, refetch } = useBodyLocations();
+  const prefetchRegion = usePrefetchRegion();
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (search.trim()) navigate(`/exercise-library/search?q=${encodeURIComponent(search.trim())}`);
   };
+
 
   return (
     <Layout>
@@ -348,8 +378,10 @@ export const ExerciseLibraryHome = () => {
             </p>
           </div>
 
-          {loading ? (
-            <p className="text-center py-12 text-muted-foreground">Loading...</p>
+          {isLoading ? (
+            <div className="mb-8"><RowSkeletonList count={6} /></div>
+          ) : isError ? (
+            <div className="mb-8"><RetryBox onRetry={() => refetch()} /></div>
           ) : (
             <div className="space-y-3 mb-8">
               {locations.map((loc) => (
@@ -357,10 +389,12 @@ export const ExerciseLibraryHome = () => {
                   key={loc.id}
                   to={`/exercise-library/region/${loc.slug}`}
                   title={loc.name}
+                  onHoverPrefetch={() => prefetchRegion(loc.slug)}
                 />
               ))}
             </div>
           )}
+
 
           <form onSubmit={onSearch} className="relative mb-8">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -382,19 +416,29 @@ export const ExerciseLibraryHome = () => {
 // ---------- Joint (Region) Detail: General + Pathology cards ----------
 export const RegionDetail = () => {
   const { slug = "" } = useParams();
-  const { items: locations } = useBodyLocations();
-  const location = locations.find((l) => l.slug === slug);
-  const pathologies = usePathologiesForLocation(location?.id || null);
-  const { data: exercises, loading } = useRehabExercises();
+  const { data: location, isLoading: locLoading, isError: locError, refetch: refetchLoc } =
+    useBodyLocationBySlug(slug);
+  const {
+    data: pathologies = [],
+    isLoading: pathLoading,
+    isError: pathError,
+    refetch: refetchPath,
+  } = usePathologiesForLocation(location?.id);
+  const {
+    data: exercises = [],
+    isLoading: exLoading,
+    isError: exError,
+    refetch: refetchEx,
+  } = useExercisesForLocation(location?.id);
 
   const displayName = location?.name || slug;
   const generalExercises = useMemo(
-    () =>
-      exercises.filter(
-        (e) => e.is_general_exercise && e.location_slugs.includes(slug)
-      ),
-    [exercises, slug]
+    () => exercises.filter((e) => e.is_general_exercise),
+    [exercises]
   );
+
+  const loading = locLoading || pathLoading || exLoading;
+  const isError = locError || pathError || exError;
 
   return (
     <Layout>
@@ -429,7 +473,17 @@ export const RegionDetail = () => {
 
 
           {loading ? (
-            <p className="text-center py-12 text-muted-foreground">Loading...</p>
+            <div className="mb-8"><RowSkeletonList count={4} /></div>
+          ) : isError ? (
+            <div className="mb-8">
+              <RetryBox
+                onRetry={() => {
+                  refetchLoc();
+                  refetchPath();
+                  refetchEx();
+                }}
+              />
+            </div>
           ) : (
             <div className="space-y-3 mb-8">
               {generalExercises.length > 0 && (
@@ -474,20 +528,22 @@ export const RegionDetail = () => {
   );
 };
 
+
 // ---------- General Exercises list for a joint ----------
 export const RegionGeneralDetail = () => {
   const { slug = "" } = useParams();
-  const { items: locations } = useBodyLocations();
-  const location = locations.find((l) => l.slug === slug);
+  const { data: location } = useBodyLocationBySlug(slug);
   const displayName = location?.name || slug;
-  const { data: exercises, loading } = useRehabExercises();
+  const {
+    data: exercises = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useExercisesForLocation(location?.id);
 
   const list = useMemo(
-    () =>
-      exercises.filter(
-        (e) => e.is_general_exercise && e.location_slugs.includes(slug)
-      ),
-    [exercises, slug]
+    () => exercises.filter((e) => e.is_general_exercise),
+    [exercises]
   );
 
   return (
@@ -521,8 +577,10 @@ export const RegionGeneralDetail = () => {
           <p className="text-muted-foreground text-base mb-6">
             Foundational mobility, stretching, and strengthening routines for the {displayName.toLowerCase()}.
           </p>
-          {loading ? (
-            <p className="text-center py-12 text-muted-foreground">Loading...</p>
+          {isLoading ? (
+            <CardGridSkeleton count={6} />
+          ) : isError ? (
+            <RetryBox onRetry={() => refetch()} />
           ) : (
             <ExerciseList
               exercises={list}
@@ -535,6 +593,7 @@ export const RegionGeneralDetail = () => {
     </Layout>
   );
 };
+
 
 // ---------- Library-exercise renderers (for Recommended Recovery Program) ----------
 type FullProgramShape = {
@@ -681,59 +740,29 @@ const groupRehabExercises = (list: RehabExercise[]) => {
 
 export const RegionPathologyDetail = () => {
   const { slug = "", pathologySlug = "" } = useParams();
-  const { items: locations } = useBodyLocations();
-  const location = locations.find((l) => l.slug === slug);
+  const { data: location } = useBodyLocationBySlug(slug);
   const displayName = location?.name || slug;
-  const { data: exercises, loading } = useRehabExercises();
-  const [program, setProgram] = useState<FullProgramShape | null>(null);
+  const { data: pathology } = usePathologyBySlug(pathologySlug);
+  const {
+    data: exercises = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useExercisesForPathology(pathology?.id);
+  const { data: program = null } = usePathologyProgram(pathologySlug);
   const [activeLib, setActiveLib] = useState<{ ex: LibraryExercise; pe?: PhaseExercise } | null>(null);
   const [activeRehab, setActiveRehab] = useState<RehabExercise | null>(null);
 
-  const list = useMemo(
-    () => exercises.filter((e) => e.pathology_slugs.includes(pathologySlug)),
-    [exercises, pathologySlug]
-  );
+  const list = exercises;
 
   const pathologyName =
+    pathology?.name ||
     list[0]?.pathology_names[list[0]?.pathology_slugs.indexOf(pathologySlug)] ||
     pathologySlug;
 
-  useEffect(() => {
-    (async () => {
-      const { data: p } = await (supabase as any)
-        .from("pathologies")
-        .select("exercise_program_id")
-        .eq("slug", pathologySlug)
-        .maybeSingle();
-      if (!p?.exercise_program_id) { setProgram(null); return; }
-      const { data: prog } = await (supabase as any)
-        .from("exercise_programs")
-        .select(`
-          id, slug, name, intro_text, estimated_duration, status,
-          program_phases (
-            id, title, sort_order, goal, estimated_workout_minutes,
-            phase_exercises (
-              id, phase_id, exercise_id, sort_order,
-              override_sets, override_reps, override_hold_seconds,
-              override_duration, override_frequency, is_required,
-              exercise_library ( * )
-            )
-          )
-        `)
-        .eq("id", p.exercise_program_id)
-        .eq("status", "published")
-        .maybeSingle();
-      if (!prog) { setProgram(null); return; }
-      // Sort nested arrays defensively.
-      prog.program_phases = (prog.program_phases || []).sort((a: any, b: any) => a.sort_order - b.sort_order);
-      prog.program_phases.forEach((ph: any) => {
-        ph.phase_exercises = (ph.phase_exercises || []).sort((a: any, b: any) => a.sort_order - b.sort_order);
-      });
-      setProgram(prog);
-    })();
-  }, [pathologySlug]);
-
   const grouped = useMemo(() => groupRehabExercises(list), [list]);
+  const loading = isLoading;
+
 
   return (
     <Layout>
@@ -831,7 +860,10 @@ export const RegionPathologyDetail = () => {
             </div>
 
             {loading ? (
-              <p className="text-center py-12 text-muted-foreground">Loading...</p>
+              <CardGridSkeleton count={6} />
+            ) : isError ? (
+              <RetryBox onRetry={() => refetch()} />
+
             ) : list.length === 0 ? (
               <div className="text-center py-16 border border-dashed border-border rounded-lg">
                 <Activity className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
@@ -878,7 +910,7 @@ export const RegionPathologyDetail = () => {
 
 // ---------- Search ----------
 export const ExerciseSearch = () => {
-  const { data: exercises, loading } = useRehabExercises();
+  const { data: exercises = [], isLoading: loading, isError, refetch } = useAllRehabExercises();
   const params = new URLSearchParams(window.location.search);
   const initialQ = params.get("q") || "";
   const [q, setQ] = useState(initialQ);
@@ -937,13 +969,16 @@ export const ExerciseSearch = () => {
             />
           </div>
           {loading ? (
-            <p className="text-center py-12 text-muted-foreground">Loading...</p>
+            <CardGridSkeleton count={6} />
+          ) : isError ? (
+            <RetryBox onRetry={() => refetch()} />
           ) : (
             <ExerciseList
               exercises={filtered}
               emptyMessage="No exercises match your search."
             />
           )}
+
         </div>
       </section>
     </Layout>
