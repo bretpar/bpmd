@@ -813,21 +813,34 @@ const Inner = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                className="pl-9 h-12 text-base"
+                className="pl-9 pr-[4.5rem] h-12 text-base"
                 placeholder="Search exercises..."
                 value={allExercisesQuery}
                 onChange={(e) => setAllExercisesQuery(e.target.value)}
                 autoComplete="off"
               />
-              {allExercisesQuery && (
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {allExercisesQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setAllExercisesQuery("")}
+                    className="text-xs text-muted-foreground hover:text-foreground px-1"
+                  >
+                    Clear
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={() => setAllExercisesQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    setAllExercisesQuery("");
+                    try { localStorage.removeItem("admin_diagnosis_exercise_search"); } catch {}
+                  }}
+                  className="text-xs text-destructive hover:text-destructive/80 px-1"
+                  title="Reset saved search query"
                 >
-                  Clear
+                  Reset
                 </button>
-              )}
+              </div>
             </div>
             {grouped.map((g) => (
               <div key={g.key}>
