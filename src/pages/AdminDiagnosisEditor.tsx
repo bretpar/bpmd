@@ -325,7 +325,7 @@ const Inner = () => {
       sb.from("pathologies")
         .select("id, name, slug, short_description, full_description, is_active, exercise_program_id, body_location_id")
         .eq("id", id).maybeSingle(),
-      sb.from("rehab_exercises").select("id, title, short_description, rehab_phase, image_url").eq("is_active", true).order("title"),
+      sb.from("rehab_exercises").select("id, slug, title, short_description, full_instructions, rehab_phase, image_url, video_url, equipment_needed, precautions").eq("is_active", true).order("title"),
       sb.from("rehab_exercise_pathologies").select("exercise_id").eq("pathology_id", id),
     ]);
     // Preserve unsaved edits to Diagnosis Information if the user is mid-edit
