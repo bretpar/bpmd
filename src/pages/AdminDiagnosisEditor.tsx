@@ -52,9 +52,14 @@ type PhaseRow = {
 type RehabEx = {
   id: string;
   title: string;
+  slug: string;
   short_description: string | null;
+  full_instructions: string | null;
   rehab_phase: string | null;
   image_url: string | null;
+  video_url: string | null;
+  equipment_needed: string | null;
+  precautions: string | null;
 };
 
 const REHAB_CATEGORIES: { key: string; label: string; matches: (r: RehabEx) => boolean }[] = [
