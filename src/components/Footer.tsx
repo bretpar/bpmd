@@ -28,6 +28,7 @@ const Footer = () => (
             <Link to="/exercise-library" className="hover:text-primary-foreground transition-colors">Patient Exercises</Link>
             <Link to="/pt-locations" className="hover:text-primary-foreground transition-colors">PT Locations</Link>
             <Link to="/contact" className="hover:text-primary-foreground transition-colors">Contact</Link>
+            <Link to="/about#beyond-the-clinic" className="hover:text-primary-foreground transition-colors">Beyond the Clinic</Link>
           </nav>
         </div>
 
