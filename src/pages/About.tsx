@@ -1,7 +1,12 @@
 import Layout from "@/components/Layout";
 import ContactCTA from "@/components/ContactCTA";
 import SEO from "@/components/SEO";
-import { GraduationCap, Stethoscope, Heart, Award } from "lucide-react";
+import { GraduationCap, Stethoscope, Heart, Award, ExternalLink } from "lucide-react";
+
+const projects = [
+  { name: "PaycheckMD", domain: "PaycheckMD.com", url: "https://paycheckmd.com", tag: "Physician Finance", text: "A tool that helps physicians understand their compensation and paychecks." },
+  { name: "OurFamilyCalendar", domain: "OurFamilyCalendar.com", url: "https://ourfamilycalendar.com", tag: "Family & Productivity", text: "A simple shared calendar that keeps busy families organized." },
+];
 
 const highlights = [
   { icon: Stethoscope, title: "Sports Medicine", text: "Specializing in non-operative management of musculoskeletal conditions." },
@@ -56,6 +61,32 @@ const About = () => (
               <p className="text-sm text-muted-foreground">{h.text}</p>
             </div>
           ))}
+        </div>
+
+        <div id="beyond-the-clinic" className="max-w-5xl mx-auto mt-20 scroll-mt-24">
+          <p className="text-primary font-medium mb-2 uppercase tracking-wide text-sm text-center">Beyond the Clinic</p>
+          <h2 className="text-3xl font-bold text-foreground mb-4 text-center">Other Projects</h2>
+          <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-10">
+            Outside of patient care, Dr. Parker builds simple, useful software. These projects are separate from his medical practice.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {projects.map((p) => (
+              <a
+                key={p.name}
+                href={p.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-card rounded-xl p-6 shadow-card border border-border hover:border-primary/40 transition-colors flex flex-col"
+              >
+                <span className="self-start text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary mb-4">{p.tag}</span>
+                <h3 className="text-xl font-semibold text-foreground mb-2">{p.name}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed flex-1">{p.text}</p>
+                <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary">
+                  Visit {p.domain} <ExternalLink className="w-4 h-4" />
+                </span>
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </section>
