@@ -6,6 +6,7 @@ import { GraduationCap, Stethoscope, Heart, Award, ExternalLink } from "lucide-r
 const projects = [
   { name: "PaycheckMD", domain: "PaycheckMD.com", url: "https://paycheckmd.com", tag: "Physician Finance", text: "A tool that helps physicians understand their compensation and paychecks." },
   { name: "OurFamilyCalendar", domain: "OurFamilyCalendar.com", url: "https://ourfamilycalendar.com", tag: "Family & Productivity", text: "A simple shared calendar that keeps busy families organized." },
+  { name: "CodeFinder", domain: "codefinder.brendanparkermd.com", url: "https://codefinder.brendanparkermd.com", tag: "Medical Coding", text: "A tool to find relevant ICD-10 codes to help with coding and documentation." },
 ];
 
 const highlights = [
@@ -69,7 +70,7 @@ const About = () => (
           <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-10">
             Outside of patient care, Dr. Parker builds simple, useful software. These projects are separate from his medical practice.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((p) => (
               <a
                 key={p.name}
