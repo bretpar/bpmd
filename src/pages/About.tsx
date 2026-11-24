@@ -4,9 +4,9 @@ import SEO from "@/components/SEO";
 import { GraduationCap, Stethoscope, Heart, Award, ExternalLink } from "lucide-react";
 
 const projects = [
-  { name: "PaycheckMD", domain: "PaycheckMD.com", url: "https://paycheckmd.com", tag: "Physician Finance", text: "A tool that helps physicians understand their compensation and paychecks." },
-  { name: "OurFamilyCalendar", domain: "OurFamilyCalendar.com", url: "https://ourfamilycalendar.com", tag: "Family & Productivity", text: "A simple shared calendar that keeps busy families organized." },
-  { name: "CodeFinder", domain: "codefinder.brendanparkermd.com", url: "https://codefinder.brendanparkermd.com", tag: "Medical Coding", text: "A tool to find relevant ICD-10 codes to help with coding and documentation." },
+  { name: "PaycheckMD", label: "PaycheckMD", domain: "PaycheckMD.com", url: "https://paycheckmd.com", tag: "Physician Finance", text: "A tool that helps physicians understand their compensation and paychecks." },
+  { name: "OurFamilyCalendar", label: "Our Family Calendar", domain: "OurFamilyCalendar.com", url: "https://ourfamilycalendar.com", tag: "Family & Productivity", text: "A simple shared calendar that keeps busy families organized." },
+  { name: "CodeFinder", label: "Code Finder", domain: "codefinder.brendanparkermd.com", url: "https://codefinder.brendanparkermd.com", tag: "Medical Coding", text: "A tool to find relevant ICD-10 codes to help with coding and documentation." },
 ];
 
 const highlights = [
@@ -83,7 +83,7 @@ const About = () => (
                 <h3 className="text-xl font-semibold text-foreground mb-2">{p.name}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed flex-1">{p.text}</p>
                 <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary">
-                  Visit {p.domain} <ExternalLink className="w-4 h-4" />
+                  Visit {p.label} <ExternalLink className="w-4 h-4" />
                 </span>
               </a>
             ))}
